@@ -1,4 +1,4 @@
-import os, sys, time
+import os, sys, time, glob
 import subprocess as sp
 from optparse import OptionParser
 
@@ -26,29 +26,28 @@ nfile = options.nfile
 
 if __name__ == "__main__":
 
-    # ...
-    dataset_ = dataset_config[dataset]
+    for isample in glob.glob('%s/*' %directory):
+        samplename = "_".join(isample.split('/')[-1].strip('.root').split('_')[:-1])
+        outdirectory= '%s/%s' %( output , samplename )
+        if not os.path.exists(outdirectory):
+            os.system( "mkdir -p %s" %outdirectory )
+        else:
+            os.system( "rm -rf %s"   %outdirectory )
+            os.system( "mkdir -p %s" %outdirectory )
 
-    if not os.path.exists(output) : 
-        os.system( "mkdir -p %s" %output   )
-    else:
-        os.system( "rm -rf %s" %output   )
-        os.system( "mkdir -p %s" %output   )
-    
-    # make filelist, if exist, refreshing
-    if not os.path.exists(location) : os.system( "mkdir -p %s" %location )
-    samplelists = prepare( dataset_ )
+        os.system("make")
+        if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
 
-    ##
-    print("")
-    print( "EOS      : " , EOS      )
-    print( "dataset  : " , dataset  )
-    print( "location : " , location )
-    print( "batch    : " , batch    )
-    if batch:
-        print( "nfile    : " , nfile    )
-    print( "test     : " , test     )
-    print("")
+        # loop on root files
+        count=0
+        rootfiles=[]
+        for ifile in glob.glob('%s/*' %isample ):
+            count+=1
+            rootfiles.append(ifile)
+
+            if count <= nfile:
+                execute( )
+                count=0; rootfiles.clear()
 
     os.system("make")
     if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
