@@ -49,8 +49,8 @@ if __name__ == "__main__":
                 execute( )
                 count=0; rootfiles.clear()
 
-    os.system("make")
-    if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
+    #os.system("make")
+    #if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
     for iproc in samplelists:
         sample = iproc.split('/')[-1].split('.txt')[0]
         execute( sample , iproc , output , dataset_['lumi'] , dataset_['year'] )
