@@ -27,7 +27,7 @@ pd_samples= ""
 ######################################################################################
 
 def execute( outdirectory_ , jobname_  ):
-    outname = "%s/%s" %( outdirectory_ , jobname_.replace(".txt",".root") )
+    outname = "%s" %( jobname_.replace(".txt",".root") )
     cmd="./trim"
     if batch :
         print("")

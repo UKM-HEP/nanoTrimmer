@@ -3,7 +3,7 @@
 #include "helper.h"
 
 // trimming, variables to be saved
-std::vector<std::string> TnP_variables = {
+std::vector<std::string> save_branches = {
   "nJet",
   "Jet_pt",
   "Jet_eta",
@@ -56,12 +56,12 @@ int main(int argc, char **argv) {
 
   // Skimming
   df = df.Filter( "nJet<4"       , "remove events with number of jet >3"      );
-  df = df.Filter( "nElectron<6"  , "remove events with number of electron >5" );
-  df = df.Filter( "nMuon<6"      , "remove events with number of muon >5"     );
-  df = df.Filter( "Jet_pt[0]>20" , "events with jet pt > 20 GeV"              );
-  df = df.Filter( "Jet_pt[1]>20" , "events with jet pt > 20 GeV"              );
+  //df = df.Filter( "nElectron<6"  , "remove events with number of electron >5" );
+  //df = df.Filter( "nMuon<6"      , "remove events with number of muon >5"     );
+  //df = df.Filter( "Jet_pt[0]>20" , "events with jet pt > 20 GeV"              );
+  //df = df.Filter( "Jet_pt[1]>20" , "events with jet pt > 20 GeV"              );
   
-  df.Snapshot( "fitter_tree", mycfg.output , mycfg.outputVar );
+  df.Snapshot( "events", mycfg.output , save_branches );
 
   auto report = df.Report();
   report->Print();
