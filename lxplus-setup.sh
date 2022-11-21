@@ -13,7 +13,3 @@ export PYTHONPATH=$PYTHONPATH:$PWD
 
 echo "TOP        : $TOP"
 echo "PYTHONPATH : $PYTHONPATH"
-
-# update submodule
-#git submodule add git@github.com:afiqaize/framework.git
-#git submodule update --recursive
