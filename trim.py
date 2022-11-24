@@ -10,6 +10,7 @@ parser.add_option("-d","--directory", action="store", type="string", dest="direc
 parser.add_option("-o","--output", action="store", type="string", dest="output", default=os.environ['PWD'])
 parser.add_option("-b","--batch", action="store_true", dest="batch", default=False)
 parser.add_option("-t","--test", action="store_true", dest="test", default=False)
+#parser.add_option("-r","--remoteout", action="store_true", dest="test", default=False)
 parser.add_option("-n","--nfile", action="store", type="int", dest="nfile", default=10) # how many file to process in batch
 
 (options, args) = parser.parse_args()
@@ -22,6 +23,7 @@ output = options.output
 batch = options.batch
 test = options.test
 nfile = options.nfile
+#remoteout = options.remoteout
 pd_samples= ""
 
 ######################################################################################
@@ -47,6 +49,7 @@ def tosubmit(outname_, cmd_ ):
         #script.write( 'cd $TMPDIR\n' )
         script.write( 'pwd\n' )
         script.write( '%s\n' %(cmd_) )
+        script.write( 'xrdcp %s.root root://eosuser.cern.ch/%s/trim/%s/%s.root\n' %(rootname , directory , rootname.split('__')[0] , rootname) )
         script.close()
     os.system( 'chmod +x %s' %outscript )
     
@@ -55,14 +58,15 @@ def tosubmit(outname_, cmd_ ):
     with open( '%s' %(outscriptSub) , 'a' ) as script :
         script.write( 'executable              = %s\n' %outscript )
         # https://batchdocs.web.cern.ch/local/submit.html#job-flavours
-        script.write( '+JobFlavour             = \"espresso\"\n') #espresso, microcentury, longlunch
+        script.write( '+JobFlavour             = \"microcentury\"\n') #espresso, microcentury, longlunch
         # https://batchdocs.web.cern.ch/local/submit.html#resources-and-limits
-        script.write( 'request_cpus            = 3\n' )
+        script.write( 'request_cpus            = 4\n' )
         script.write( 'output                  = %s.out\n' %( outscript.replace('.sh' , '') ) )
         script.write( 'error                   = %s.err\n' %( outscript.replace('.sh' , '') ) )
         script.write( 'log                     = %s.log\n' %( outscript.replace('.sh','') ) )
-        #script.write( 'transfer_output_remaps  = \"%s.root=%s.root\"\n' %( sample_name__ , outscript.split('/')[-1].replace('.sh','') ) )
-        script.write( 'transfer_output_remaps  = \"%s.root=%s\"\n' %( rootname , outname_ ) )
+        #script.write( 'transfer_output_remaps  = \"%s.root=%s\"\n' %( rootname , outname_ ) )
+        #script.write( 'transfer_output_files = %s\n' %( outname_ ) )
+        #script.write( 'output_destination = %s\n' %( cwd if not remoteout else root://eosuser.cern.ch//eos/user/s/shoh/cmsopendata/8TeV_tnp/RunI/8TeV/ ) )
         script.write( 'queue\n' )
         script.close()
     if not test:
@@ -79,31 +83,28 @@ def execute( outdirectory_ , jobname_  ):
     outname = "%s" %( jobname_.replace(".txt",".root") )
     cmd="./trim"
     cmd+=" %s %s" %( jobname_ , outname )
-    print(cmd)
 
     if batch :
         cmd = cmd.replace(cmd.split(' ')[-1], cmd.split(' ')[-1].split('/')[-1] )
         tosubmit(outname, cmd )
         print("")
     else :
-        if test:
-            sys.exit()
-        else:
-            trun = time.time()
-            os.system(cmd)
-            tproc = time.time()
-
-            #os.system('gdb --args %s' %cmd)
-            print("--- running on %s took : %.3f seconds (%.3f minutes) ---" % ( samplename , (time.time() - tproc) , (time.time() - tproc)/60. ) )
-            print("")
-            print("--- Total run time : %.3f seconds (%.3f minutes) ---" % ( (time.time() - trun) , (time.time() - trun)/60. ) )
-            
+        print(cmd)
+        trun = time.time()
+        os.system(cmd)
+        tproc = time.time()
+        
+        #os.system('gdb --args %s' %cmd)
+        print("--- running on %s took : %.3f seconds (%.3f minutes) ---" % ( outname.split('/')[-1].replace('.root','') , (time.time() - tproc) , (time.time() - tproc)/60. ) )
+        print("")
+        print("--- Total run time : %.3f seconds (%.3f minutes) ---" % ( (time.time() - trun) , (time.time() - trun)/60. ) )
+        if test: sys.exit()
+        
     pass
 
 if __name__ == "__main__":
 
     for isample in glob.glob('%s/*' %directory):
-        #samplename = "_".join(isample.split('/')[-1].strip('.root').split('_')[:-1])
         
         if "Run" or "JPsi" in isample:
             pd_samples = isample.split('/')[-1]
@@ -116,9 +117,9 @@ if __name__ == "__main__":
 
         if not os.path.exists(outdirectory):
             os.system( "mkdir -p %s" %outdirectory )
-        else:
-            os.system( "rm -rf %s"   %outdirectory )
-            os.system( "mkdir -p %s" %outdirectory )
+        #else:
+        #    os.system( "rm -rf %s"   %outdirectory )
+        #    os.system( "mkdir -p %s" %outdirectory )
 
         os.system("make")
         if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
@@ -130,7 +131,8 @@ if __name__ == "__main__":
         for ifile in glob.glob('%s/*' %isample ):
 
             #if batch : ifile = 'root://eoscms.cern.ch/'+ifile
-            if batch : ifile = 'root://eosuser.cern.ch/'+ifile
+            if batch : 
+                ifile = 'root://eosuser.cern.ch/'+ifile
 
             if count != nfile:
                 jobname = '%s/%s__part-%s.txt' %( outdirectory , pd_samples , gcount )
