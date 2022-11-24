@@ -26,21 +26,73 @@ pd_samples= ""
 
 ######################################################################################
 
+def tosubmit(outname_, cmd_ ):
+
+    outscript=outname_.replace('.root','.sh')
+    #outfilename=outname_.split('/')[-1].split('.root')[0]
+    rootname=cmd_.split(' ')[-1].split('.root')[0]
+    
+    # condor
+    with open( '%s' %(outscript) , 'a') as script :
+        script.write( '#!/bin/bash\n' )
+        script.write( 'export X509_USER_PROXY=/afs/cern.ch/user/'+os.environ["USER"][:1]+'/'+os.environ["USER"]+'/.proxy\n' )
+        script.write( 'voms-proxy-info\n' )
+        #script.write( 'export SCRAM_ARCH=$SCRAM_ARCH\n' )
+        script.write( 'export VO_CMS_SW_DIR=/cvmfs/cms.cern.ch\n' )
+        script.write( 'source $VO_CMS_SW_DIR/cmsset_default.sh\n' )
+        script.write( 'export HOME=%s\n' %os.environ['PWD'] )
+        #script.write( 'source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh LCG_98python3 x86_64-centos7-gcc8-opt\n' ) # hardcoded
+        script.write( 'source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh LCG_101 x86_64-centos7-gcc8-opt\n' )
+        script.write( 'cd $HOME\n' )
+        #script.write( 'cd $TMPDIR\n' )
+        script.write( 'pwd\n' )
+        script.write( '%s\n' %(cmd_) )
+        script.close()
+    os.system( 'chmod +x %s' %outscript )
+    
+    # submission script
+    outscriptSub = outscript.replace( '.sh' , '.sub' )
+    with open( '%s' %(outscriptSub) , 'a' ) as script :
+        script.write( 'executable              = %s\n' %outscript )
+        # https://batchdocs.web.cern.ch/local/submit.html#job-flavours
+        script.write( '+JobFlavour             = \"espresso\"\n') #espresso, microcentury, longlunch
+        # https://batchdocs.web.cern.ch/local/submit.html#resources-and-limits
+        script.write( 'request_cpus            = 3\n' )
+        script.write( 'output                  = %s.out\n' %( outscript.replace('.sh' , '') ) )
+        script.write( 'error                   = %s.err\n' %( outscript.replace('.sh' , '') ) )
+        script.write( 'log                     = %s.log\n' %( outscript.replace('.sh','') ) )
+        #script.write( 'transfer_output_remaps  = \"%s.root=%s.root\"\n' %( sample_name__ , outscript.split('/')[-1].replace('.sh','') ) )
+        script.write( 'transfer_output_remaps  = \"%s.root=%s\"\n' %( rootname , outname_ ) )
+        script.write( 'queue\n' )
+        script.close()
+    if not test:
+        print('condor_submit %s' %(outscriptSub) )
+        os.system( 'condor_submit %s' %(outscriptSub) )
+    else:
+        print('condor_submit %s' %(outscriptSub) )
+        os.system( 'condor_submit %s' %(outscriptSub) )
+        sys.exit()
+    pass
+         
+
 def execute( outdirectory_ , jobname_  ):
     outname = "%s" %( jobname_.replace(".txt",".root") )
     cmd="./trim"
+    cmd+=" %s %s" %( jobname_ , outname )
+    print(cmd)
+
     if batch :
+        cmd = cmd.replace(cmd.split(' ')[-1], cmd.split(' ')[-1].split('/')[-1] )
+        tosubmit(outname, cmd )
         print("")
     else :
-        trun = time.time();
-        cmd+=" %s %s" %( jobname_ , outname )
-        tproc = time.time()
         if test:
-            print(cmd)
             sys.exit()
         else:
-            print(cmd)
+            trun = time.time()
             os.system(cmd)
+            tproc = time.time()
+
             #os.system('gdb --args %s' %cmd)
             print("--- running on %s took : %.3f seconds (%.3f minutes) ---" % ( samplename , (time.time() - tproc) , (time.time() - tproc)/60. ) )
             print("")
@@ -68,8 +120,8 @@ if __name__ == "__main__":
             os.system( "rm -rf %s"   %outdirectory )
             os.system( "mkdir -p %s" %outdirectory )
 
-        #os.system("make")
-        #if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
+        os.system("make")
+        if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
 
         # loop on root files
         count=0
@@ -77,10 +129,12 @@ if __name__ == "__main__":
         rootfiles=[]
         for ifile in glob.glob('%s/*' %isample ):
 
+            #if batch : ifile = 'root://eoscms.cern.ch/'+ifile
+            if batch : ifile = 'root://eosuser.cern.ch/'+ifile
+
             if count != nfile:
                 jobname = '%s/%s__part-%s.txt' %( outdirectory , pd_samples , gcount )
                 f=open( jobname , 'w' )
-                if batch : ifile = 'root://eoscms.cern.ch/'+ifile
 
                 count+=1
                 rootfiles.append(ifile)
