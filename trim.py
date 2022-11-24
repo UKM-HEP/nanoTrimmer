@@ -50,6 +50,7 @@ def tosubmit(outname_, cmd_ ):
         script.write( 'pwd\n' )
         script.write( '%s\n' %(cmd_) )
         script.write( 'xrdcp %s.root root://eosuser.cern.ch/%s/trim/%s/%s.root\n' %(rootname , directory , rootname.split('__')[0] , rootname) )
+        script.write( 'rm %s.root\n' %rootname )
         script.close()
     os.system( 'chmod +x %s' %outscript )
     
@@ -64,6 +65,9 @@ def tosubmit(outname_, cmd_ ):
         script.write( 'output                  = %s.out\n' %( outscript.replace('.sh' , '') ) )
         script.write( 'error                   = %s.err\n' %( outscript.replace('.sh' , '') ) )
         script.write( 'log                     = %s.log\n' %( outscript.replace('.sh','') ) )
+        script.write( 'should_transfer_files = YES\n' )
+        script.write( 'when_to_transfer_output = ON_EXIT\n' )
+        script.write( 'transfer_output_files = \"\"\n' )
         #script.write( 'transfer_output_remaps  = \"%s.root=%s\"\n' %( rootname , outname_ ) )
         #script.write( 'transfer_output_files = %s\n' %( outname_ ) )
         #script.write( 'output_destination = %s\n' %( cwd if not remoteout else root://eosuser.cern.ch//eos/user/s/shoh/cmsopendata/8TeV_tnp/RunI/8TeV/ ) )
@@ -104,6 +108,9 @@ def execute( outdirectory_ , jobname_  ):
 
 if __name__ == "__main__":
 
+    os.system("make")
+    if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
+
     for isample in glob.glob('%s/*' %directory):
         
         if "Run" or "JPsi" in isample:
@@ -117,12 +124,9 @@ if __name__ == "__main__":
 
         if not os.path.exists(outdirectory):
             os.system( "mkdir -p %s" %outdirectory )
-        #else:
-        #    os.system( "rm -rf %s"   %outdirectory )
-        #    os.system( "mkdir -p %s" %outdirectory )
-
-        os.system("make")
-        if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
+        else:
+            os.system( "rm -rf %s"   %outdirectory )
+            os.system( "mkdir -p %s" %outdirectory )
 
         # loop on root files
         count=0
