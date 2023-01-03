@@ -74,30 +74,58 @@ auto TnP(T &df , std::string &flavor , Helper::config_t &cfg ) {
 			 const RVec<float>& lepton_phi,
 			 const RVec<float>& lepton_mass,
 			 const RVec<int>& lepton_charge,
-			 const RVec<int>& lepton_Id
+			 const RVec<int>& lepton_Id,
+			 const RVec<int>& lepton_pdgId
 			 )
-  {
-    // convert collection into TLorentz Vector collection
-    std::vector<std::pair<PtEtaPhiEVecto,idx>> Tag_vector, Probe_vector;
-    PtEtaPhiMVector v;
+		  {
+		    // convert collection into TLorentz Vector collection
+		    std::vector<std::pair<PtEtaPhiMVector,int>> tag_vector, probe_vector;
+		    std::vector<std::pair<std::pair<PtEtaPhiMVector,int>,std::pair<PtEtaPhiMVector,int>>> pair_vector;
+		    PtEtaPhiMVector v1, v2;
+		    float mass;
+		    
+		    // make pair LorentzVector
+		    for (int_i i = 0 ; i < lepton_pt.size(); i++ ){
+		      v1.SetPtEtaPhiM( 0., 0., 0., 0. );
+		      // tag selection
+		      if ( lepton_pt[i] > 30. && lepton_Id[i] > 1 && lepton_eta[i] < 2.5 ) v1.SetPtEtaPhiM( lepton_pt[i] , lepton_eta[i] , lepton_phi[i] , lepton_mass[i] );
+		      
+		      // looping probe candidate
+		      for (int_i j = 0 ; j < lepton_pt.size(); j++ ){
+			v2.SetPtEtaPhiM( 0., 0., 0., 0. );
+			mass = 0.;
+			// probe selection
+			if !( lepton_pt[j] > 30. && lepton_Id[j] > 1 && lepton_eta[j] < 2.5 ) continue;
+			v2.SetPtEtaPhiM( lepton_pt[j] , lepton_eta[j] , lepton_phi[j] , lepton_mass[j] );
+			//Probe_vector.push_back(std::make_pair( v , j ) );
+			
+			mass = (v1 + v2).M();
+			
+			if ( ( mass > kMaxMass ) || ( mass < kMinMass ) ) continue;
+			
+			if ( (lepton_charge[i]*lepton_charge[j]) ==0 ) continue;
+			
+			probe_vector.push_back( std::make_pair( v2 , j ) );
+			
+		      }
+		      if ( probe_vector.size() == 1 ) pair_vector.push_back( std::make_pair( v1 , i ) , probe_vector[0] );
+		      
+		    } // make pair LorentzVector
 
-    // make tag LorentzVector
-    for (int_i i = 0 ; i < electron_pt.size(); i++ ){
-      v.SetPtEtaPhiM( lepton_pt[i] , lepton_eta[i] , lepton_phi[i] , lepton_mass[i] );
-      if ( lepton_Id[i]  )
-	Electron_vector1.push_back(std::make_pair( v , i ) );
-    }
-
+		    
+		    // making tuple
+		    
+		    
+		  };
+  
     // make probe LorentzVector
-    for (int_i i = 0 ; i < electron_pt.size(); i++ ){
+    for (int_i i = 0 ; i < lepton_pt.size(); i++ ){
       v.SetPtEtaPhiM( lepton_pt[i] , lepton_eta[i] , lepton_phi[i] , lepton_mass[i] );
-      Electron_vector1.push_back(std::make_pair( v , i ) );
+      Probe_vector.push_back(std::make_pair( v , i ) );
     }
-
-    
-    
+        
     // Get indices of all possible combinations
-    auto comb = Combinations( Electron_vector1 , Electron_vector2 );
+    auto comb = Combinations( Tag_vector , Probe_vector );
     const auto numComb = comb[0].size();
 
     for (size_t i = 0 ; i < numComb ; i++) {
