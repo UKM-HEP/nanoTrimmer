@@ -22,12 +22,12 @@
 #include <iterator> // for std::begin, std::end
 
 #include "TRandom3.h"
-//#include "TLorentzVector.h"
-#include "LorentzVector.h"
-
 #include "TMath.h"
 
 #include <thread>
+
+typedef std::pair<std::pair<ROOT::Math::PtEtaPhiMVector,int>,std::pair<ROOT::Math::PtEtaPhiMVector,int>> tnp;
+typedef std::vector<std::pair<std::pair<ROOT::Math::PtEtaPhiMVector,int>,std::pair<ROOT::Math::PtEtaPhiMVector,int>>> tnp_pair;  
 
 namespace Helper {
 
@@ -38,6 +38,20 @@ namespace Helper {
     bool operator() (std::pair<std::pair<int,int>,float> i , std::pair<std::pair<int,int>,float> j) { return ( (i.second) < (j.second) ); }
   };
 
+  /*
+   * sort according to the least invariant mass toward z-pole
+   */
+  struct ZmassSorter {
+    bool operator() ( tnp i , tnp j ) { return ( abs((i.first.first+i.second.first).M() - 90.1 ) < abs((j.first.first+j.second.first).M() - 90.1) );  }
+  };
+
+  template <typename T>
+  tnp_pair IndexbyZmass(T vin ){
+    ZmassSorter comparator;
+    std::sort (vin.begin() , vin.end() , comparator);
+    return vin;
+  }
+  
   // Join two vectors
   std::vector<std::string> joinVector( std::vector<std::string> &v1 , std::vector<std::string> &v2){
     // Initialise a vector
@@ -93,10 +107,9 @@ namespace Helper {
   /*
    * vector maker
    */
-  template<typename T>
-    TLorentzVector VectorMaker(T pt, T eta, T phi, T m){
-    TLorentzVector out;
-    out.SetPtEtaPhiM(pt,eta,phi,m);
+  template <typename T>
+  ROOT::Math::PtEtaPhiMVector makeLV(T pt, T eta, T phi, T m){
+    ROOT::Math::PtEtaPhiMVector out(pt,eta,phi,m);
     return out;
   }
 
@@ -110,6 +123,8 @@ namespace Helper {
     bool isMC;
     std::vector<std::string> infiles;
     std::vector<std::string> outputVar;
+    float kMaxMass;
+    float kMinMass;
   };
   
 } //helper
