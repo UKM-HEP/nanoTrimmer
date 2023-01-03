@@ -1,7 +1,7 @@
 #include "helper.h"
 
-// trimming, variables to be saved
-std::vector<std::string> save_branches = {
+// default variables to be saved
+std::vector<std::string> default_branches = {
   "nJet",
   "Jet_pt",
   "Jet_eta",
@@ -39,13 +39,13 @@ std::vector<std::string> save_branches = {
   "Muon_genPartIdx",
   "Xsec",
   "evtWeight",
-  "HLT_DoubleMu7",
-  "HLT_Mu13_Mu8",
-  "HLT_Mu17_Mu8HLT_Ele17_CaloTrk_Ele8_CaloTrk",
-  "HLT_TripleEle10_CaloIdL_TrkIdVL",
-  "HLT_Ele17_CaloTrk_Ele8_CaloTrk",
-  "HLT_Ele15_Ele8_Ele5_CaloIdL_TrkIdVL",
-  "HLT_Dimuon10_Jpsi_Barrel"
+  //"HLT_DoubleMu7",
+  //"HLT_Mu13_Mu8",
+  //"HLT_Mu17_Mu8HLT_Ele17_CaloTrk_Ele8_CaloTrk",
+  //"HLT_TripleEle10_CaloIdL_TrkIdVL",
+  //"HLT_Ele17_CaloTrk_Ele8_CaloTrk",
+  //"HLT_Ele15_Ele8_Ele5_CaloIdL_TrkIdVL",
+  //"HLT_Dimuon10_Jpsi_Barrel"
 };
 
 
@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
   Helper::config_t mycfg;
   mycfg.input  = argv[1];
   mycfg.output = argv[2];
+  mycfg.outputVar = default_branches;
   mycfg.isMC   = ( mycfg.input.find("Run") != std::string::npos || mycfg.input.find("JPsi") != std::string::npos ) ? false : true;
 
   // filelist
@@ -102,7 +103,7 @@ int main(int argc, char **argv) {
   df = df.Filter( "Muon_pt1>10" , "events with muon1 pt > 20 GeV" );
   df = df.Filter( "Muon_pt2>10" , "events with muon2 pt > 20 GeV" );
   
-  df.Snapshot( "events", mycfg.output , save_branches );
+  df.Snapshot( "events", mycfg.output , mycfg.outputVar );
 
   auto report = df.Report();
   report->Print();

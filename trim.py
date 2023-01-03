@@ -10,6 +10,7 @@ parser.add_option("-d","--directory", action="store", type="string", dest="direc
 parser.add_option("-o","--output", action="store", type="string", dest="output", default=os.environ['PWD'])
 parser.add_option("-b","--batch", action="store_true", dest="batch", default=False)
 parser.add_option("-t","--test", action="store_true", dest="test", default=False)
+parser.add_option("-m","--mdebugging", action="store_true", dest="debugging", default=False)
 #parser.add_option("-r","--remoteout", action="store_true", dest="test", default=False)
 parser.add_option("-n","--nfile", action="store", type="int", dest="nfile", default=10) # how many file to process in batch
 
@@ -22,6 +23,7 @@ directory = options.directory
 output = options.output
 batch = options.batch
 test = options.test
+debugging = options.debugging
 nfile = options.nfile
 #remoteout = options.remoteout
 pd_samples= ""
@@ -104,6 +106,20 @@ def execute( outdirectory_ , jobname_  ):
 
 if __name__ == "__main__":
 
+    if debugging :
+        outdirectory= '%s/test' %( output )
+        #if not os.path.exists(outdirectory): os.system( "mkdir -p %s" %outdirectory )
+        os.system("make")
+
+        # make txt file
+        os.system("ls $PWD/test/*_in.root > %s/test.txt " %( outdirectory ) )
+        cmd="./trim %s/test.txt %s/test_out.root" %( outdirectory , outdirectory )
+        print(cmd)
+        os.system(cmd)
+        print("Debugging End")
+        sys.exit()
+
+        
     for isample in glob.glob('%s/*' %directory):
         
         if "Run" or "JPsi" in isample:

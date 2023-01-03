@@ -22,7 +22,8 @@
 #include <iterator> // for std::begin, std::end
 
 #include "TRandom3.h"
-#include "TLorentzVector.h"
+//#include "TLorentzVector.h"
+#include "LorentzVector.h"
 
 #include "TMath.h"
 
@@ -36,6 +37,19 @@ namespace Helper {
   struct dRSorter {
     bool operator() (std::pair<std::pair<int,int>,float> i , std::pair<std::pair<int,int>,float> j) { return ( (i.second) < (j.second) ); }
   };
+
+  // Join two vectors
+  std::vector<std::string> joinVector( std::vector<std::string> &v1 , std::vector<std::string> &v2){
+    // Initialise a vector
+    // to store the common values
+    // and an iterator
+    // to traverse this vector
+    std::vector<std::string> vout(v1.size() + v2.size());
+    std::vector<std::string>::iterator it;
+ 
+    it = set_union(v1.begin(), v1.end(), v2.begin(), v2.end(), vout.begin());
+    return vout;
+  }
 
   /*
    * Index by deltaR
