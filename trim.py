@@ -112,7 +112,7 @@ if __name__ == "__main__":
         os.system("make")
 
         # make txt file
-        os.system("ls $PWD/test/*_in.root > %s/test.txt " %( outdirectory ) )
+        os.system("ls $PWD/test/*_test_*.root > %s/test.txt " %( outdirectory ) )
         cmd="./trim %s/test.txt %s/test_out.root" %( outdirectory , outdirectory )
         print(cmd)
         os.system(cmd)

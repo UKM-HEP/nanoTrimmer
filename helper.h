@@ -1,5 +1,6 @@
 #ifndef HELPER_H
 #define HELPER_H
+
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDFHelpers.hxx"
 #include "ROOT/RVec.hxx"
@@ -51,6 +52,16 @@ namespace Helper {
     std::sort (vin.begin() , vin.end() , comparator);
     return vin;
   }
+
+  // load text file
+  std::vector<std::string> makeList(const std::string &textfile)
+  {
+    std::ifstream file(textfile);
+    std::string str;
+    std::vector<std::string> vfout;
+    while (std::getline(file, str)) { if(str.find('#')==std::string::npos) vfout.push_back(str); }
+    return vfout;
+  }
   
   // Join two vectors
   std::vector<std::string> joinVector( std::vector<std::string> &v1 , std::vector<std::string> &v2){
@@ -78,16 +89,7 @@ namespace Helper {
     }
     return indecies;
   }
-  
-  /*
-   * bit decoder
-   */
-  template <typename T>
-    int bitdecoder( T decimal , T kbit){
-    // shift to specific bit to the left, and query on/off state
-    return (decimal >> kbit & 1);
-  }
-  
+    
   /*
    * Compute the difference in the azimuth coordinate taking the boundary conditions at 2*pi into account.
    */

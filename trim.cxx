@@ -1,6 +1,7 @@
 #include "helper.h"
 
 // default variables to be saved
+/*
 std::vector<std::string> default_branches = {
   "nJet",
   "Jet_pt",
@@ -39,14 +40,8 @@ std::vector<std::string> default_branches = {
   "Muon_genPartIdx",
   "Xsec",
   "evtWeight",
-  //"HLT_DoubleMu7",
-  //"HLT_Mu13_Mu8",
-  //"HLT_Mu17_Mu8HLT_Ele17_CaloTrk_Ele8_CaloTrk",
-  //"HLT_TripleEle10_CaloIdL_TrkIdVL",
-  //"HLT_Ele17_CaloTrk_Ele8_CaloTrk",
-  //"HLT_Ele15_Ele8_Ele5_CaloIdL_TrkIdVL",
-  //"HLT_Dimuon10_Jpsi_Barrel"
 };
+*/
 
 
 int main(int argc, char **argv) {
@@ -70,7 +65,10 @@ int main(int argc, char **argv) {
   Helper::config_t mycfg;
   mycfg.input  = argv[1];
   mycfg.output = argv[2];
-  mycfg.outputVar = default_branches;
+  //mycfg.outputVar = default_branches;
+  std::vector<std::string> out = Helper::makeList("data/out.dat");
+  std::vector<std::string> hlt = Helper::makeList("data/HLT.dat");
+  mycfg.outputVar = Helper::joinVector( out , hlt );
   mycfg.isMC   = ( mycfg.input.find("Run") != std::string::npos || mycfg.input.find("JPsi") != std::string::npos ) ? false : true;
 
   // filelist
