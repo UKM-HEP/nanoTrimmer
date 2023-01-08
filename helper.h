@@ -61,9 +61,8 @@ namespace Helper {
   void remove(std::vector<valuetagpair> &v){
     auto end = v.end();
     for (auto it = v.begin(); it != end; ++it) {
-      end = std::remove(it + 1, end, *it);
-    }
-    
+      end = std::remove( it + 1 , end, *it);
+    }    
     v.erase(end, v.end());
   }
 
@@ -87,7 +86,8 @@ namespace Helper {
   std::vector<valuetagpair> IndexbyZmass(T vin ){
     ZmassSorter comparator;
     std::sort (vin.begin() , vin.end() , comparator);
-    remove(vin);
+    // remove duplicate , NO WORKING, TRY USING STD::MAP
+    vin.erase(std::unique(vin.begin(), vin.end()), vin.end());
     return vin;
   }
 
