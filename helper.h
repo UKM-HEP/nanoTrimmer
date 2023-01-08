@@ -56,16 +56,7 @@ namespace Helper {
     it = set_union(v1.begin(), v1.end(), v2.begin(), v2.end(), vout.begin());
     return vout;
   }
-
-  // remove the second occurrence of the duplicate
-  void remove(std::vector<valuetagpair> &v){
-    auto end = v.end();
-    for (auto it = v.begin(); it != end; ++it) {
-      end = std::remove( it + 1 , end, *it);
-    }    
-    v.erase(end, v.end());
-  }
-
+  
   /////////////////////
   
   /*
@@ -86,8 +77,6 @@ namespace Helper {
   std::vector<valuetagpair> IndexbyZmass(T vin ){
     ZmassSorter comparator;
     std::sort (vin.begin() , vin.end() , comparator);
-    // remove duplicate , NO WORKING, TRY USING STD::MAP
-    vin.erase(std::unique(vin.begin(), vin.end()), vin.end());
     return vin;
   }
 
@@ -104,7 +93,17 @@ namespace Helper {
     }
     return indecies;
   }
+
+  struct compare
+  {
+    valuetagpair thevpair;
+    compare(valuetagpair const &i): thevpair(i) {}
     
+    bool operator()(valuetagpair const &i) {
+      return (i.first == thevpair.first);
+    }
+  };
+  
   /*
    * Compute the difference in the azimuth coordinate taking the boundary conditions at 2*pi into account.
    */

@@ -1,3 +1,3 @@
-/home/shoh/Work/nanoTrimmer/test/Run2012B_SingleElectron_test_0.root
-/home/shoh/Work/nanoTrimmer/test/Run2012B_SingleElectron_test_1.root
-/home/shoh/Work/nanoTrimmer/test/Run2012B_SingleElectron_test_2.root
+/Users/shoh/Works/nanoTrimmer/test/Run2012B_SingleElectron_test_0.root
+/Users/shoh/Works/nanoTrimmer/test/Run2012B_SingleElectron_test_1.root
+/Users/shoh/Works/nanoTrimmer/test/Run2012B_SingleElectron_test_2.root

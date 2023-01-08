@@ -144,10 +144,14 @@ auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
 	
 	if ( ( mass > cfg.kMaxMass ) || ( mass < cfg.kMinMass ) ) continue;
 
-	std::cout<<"The mass is "<<mass<<std::endl;
+	//std::cout<<"The mass is "<<mass<<std::endl;
 	
 	if ( (lepton_charge[i]*lepton_charge[j]) >0 ) continue;
 
+	valuetagpair valuepair = std::make_pair( mass , std::make_pair( i , j ) );
+
+	if ( ( masspair_vector.size() !=0 ) && (std::any_of(masspair_vector.begin(), masspair_vector.end(), Helper::compare(valuepair))) ) continue;
+	
 	masspair_vector.push_back( std::make_pair( mass , std::make_pair( i , j ) ) );
 	
       } // end probe loop
