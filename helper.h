@@ -18,20 +18,57 @@
 #include <cmath>
 #include <map>
 
-#include "utility" // std::pair
-#include <algorithm> // for std::find
-#include <iterator> // for std::begin, std::end
+#include <utility>
+#include <algorithm>
+#include <iterator>
 
 #include "TRandom3.h"
 #include "TMath.h"
 
 #include <thread>
 
-typedef std::pair<std::pair<ROOT::Math::PtEtaPhiMVector,int>,std::pair<ROOT::Math::PtEtaPhiMVector,int>> tnp;
-typedef std::vector<std::pair<std::pair<ROOT::Math::PtEtaPhiMVector,int>,std::pair<ROOT::Math::PtEtaPhiMVector,int>>> tnp_pair;  
+typedef std::pair<float,std::pair<int,int>> valuetagpair;
+//typedef std::pair<std::pair<ROOT::Math::PtEtaPhiMVector,int>,std::pair<ROOT::Math::PtEtaPhiMVector,int>> tnp;
+//typedef std::vector<std::pair<std::pair<ROOT::Math::PtEtaPhiMVector,int>,std::pair<ROOT::Math::PtEtaPhiMVector,int>>> tnp_pair;
+//typedef ROOT::VecOps::RVec<ROOT::Math::PtEtaPhiMVector> VLorentzV;
 
 namespace Helper {
 
+  // load text file
+  std::vector<std::string> makeList(const std::string &textfile)
+  {
+    std::ifstream file(textfile);
+    std::string str;
+    std::vector<std::string> vfout;
+    while (std::getline(file, str)) { if(str.find('#')==std::string::npos) vfout.push_back(str); }
+    return vfout;
+  }
+
+  // Join two vectors
+  std::vector<std::string> joinVector( std::vector<std::string> &v1 , std::vector<std::string> &v2){
+    // Initialise a vector
+    // to store the common values
+    // and an iterator
+    // to traverse this vector
+    std::vector<std::string> vout(v1.size() + v2.size());
+    std::vector<std::string>::iterator it;
+
+    it = set_union(v1.begin(), v1.end(), v2.begin(), v2.end(), vout.begin());
+    return vout;
+  }
+
+  // remove the second occurrence of the duplicate
+  void remove(std::vector<valuetagpair> &v){
+    auto end = v.end();
+    for (auto it = v.begin(); it != end; ++it) {
+      end = std::remove(it + 1, end, *it);
+    }
+    
+    v.erase(end, v.end());
+  }
+
+  /////////////////////
+  
   /*
    * sort Gen matched candidates in ascending order
    */
@@ -43,37 +80,15 @@ namespace Helper {
    * sort according to the least invariant mass toward z-pole
    */
   struct ZmassSorter {
-    bool operator() ( tnp i , tnp j ) { return ( abs((i.first.first+i.second.first).M() - 90.1 ) < abs((j.first.first+j.second.first).M() - 90.1) );  }
+    bool operator() ( valuetagpair i , valuetagpair j ) { return ( abs(i.first - 91.2) < abs(j.first - 91.2) );  }
   };
 
   template <typename T>
-  tnp_pair IndexbyZmass(T vin ){
+  std::vector<valuetagpair> IndexbyZmass(T vin ){
     ZmassSorter comparator;
     std::sort (vin.begin() , vin.end() , comparator);
+    remove(vin);
     return vin;
-  }
-
-  // load text file
-  std::vector<std::string> makeList(const std::string &textfile)
-  {
-    std::ifstream file(textfile);
-    std::string str;
-    std::vector<std::string> vfout;
-    while (std::getline(file, str)) { if(str.find('#')==std::string::npos) vfout.push_back(str); }
-    return vfout;
-  }
-  
-  // Join two vectors
-  std::vector<std::string> joinVector( std::vector<std::string> &v1 , std::vector<std::string> &v2){
-    // Initialise a vector
-    // to store the common values
-    // and an iterator
-    // to traverse this vector
-    std::vector<std::string> vout(v1.size() + v2.size());
-    std::vector<std::string>::iterator it;
- 
-    it = set_union(v1.begin(), v1.end(), v2.begin(), v2.end(), vout.begin());
-    return vout;
   }
 
   /*
