@@ -54,23 +54,41 @@ std::vector<std::string> TnP_variables = {
 
 // assigning pdgid for easy identification
 template<typename T>
-auto makePdgId( T &df , Helper::config_t &cfg , const std::string &flavor ){
+auto tnpkin( T &df , Helper::config_t &cfg , const std::string &flavor ){
 
   using namespace ROOT::VecOps;
 
-  int ID = ( flavor == "Electron" ) ? 11 : 12;
-  std::string lep_pdgid = flavor+"_pdgId";
+  int id = ( flavor == "Electron" ) ? 11 : 12;
+  //std::string lep_pdgid = flavor+"_pdgId";
   
-  std::cout<<"lep_pdgid = "<<lep_pdgid<<std::endl;
-  cfg.outputVar.push_back(flavor+"_pdgId");
-  
-  auto pdgId = [&ID]( const RVec<int>& lepton_charge ) {
-    RVec<int> out;
-    for (auto& it : lepton_charge ) {
-      ID = ( it < 0 ) ? ID*(-1) : ID;
-      out.push_back(ID);
-    }
-    return out;
+  //std::cout<<"lep_pdgid = "<<lep_pdgid<<std::endl;
+  //cfg.outputVar.push_back(flavor+"_pdgId");
+
+  // make kinematics
+  auto kin = [&cfg]( const RVec<int>& tag_idx,
+		     const RVec<int>& probe_idx,
+		     const RVec<float>& lepton_pt,
+		     const RVec<float>& lepton_eta,
+		     const RVec<float>& lepton_phi,
+		     const RVec<float>& lepton_mass,
+		     const RVec<float>& lepton_charge,
+		     const RVec<int>& lepton_wp
+		     ){
+    RVec<float> tag_pt, tag_eta, tag_phi, tag_mass;
+    RVec<float>	probe_pt, probe_eta, probe_phi, probe_mass;
+    RVec<int> tag_pdgid, probe_pdgid, tag_wp, probe_wp;
+
+    // loop for tag
+    for ( auto& it : tag_idx ){
+      
+      id = ( it < 0 ) ? id*(-1) : id;
+      
+      tag_pt.push_back( lepton_pt[it] );
+      tag_eta.push_back( lepton_eta[it] );
+      tag_phi.push_back( lepton_phi[it] );
+      tag_mass.push_back( lepton_mass[it] );
+      tag_pdgid.push_back( id )
+	}
   };
   
   return df.Define( lep_pdgid , pdgId , { lep_pdgid } );
@@ -89,7 +107,7 @@ auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
   cfg.outputVar = Helper::joinVector( cfg.outputVar , TnP_variables  );
 
   // lambda function
-  auto maketnpvector  = [&cfg,flavor](
+  auto maketnpvector  = [&cfg,&flavor](
 			 const RVec<float>& lepton_pt,
 			 const RVec<float>& lepton_eta,
 			 const RVec<float>& lepton_phi,
