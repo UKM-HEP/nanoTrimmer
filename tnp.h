@@ -148,9 +148,11 @@ auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
 	
 	if ( (lepton_charge[i]*lepton_charge[j]) >0 ) continue;
 
-	valuetagpair valuepair = std::make_pair( mass , std::make_pair( i , j ) );
+	//valuetagpair valuepair = std::make_pair( mass , std::make_pair( i , j ) );
 
-	if ( ( masspair_vector.size() !=0 ) && (std::any_of(masspair_vector.begin(), masspair_vector.end(), Helper::compare(valuepair))) ) continue;
+	//if ( ( masspair_vector.size() !=0 ) && (std::any_of(masspair_vector.begin(), masspair_vector.end(), Helper::compare(valuepair))) ) continue;
+
+	if ( std::any_of( masspair_vector.begin(), masspair_vector.end(), Helper::compare(mass) ) ) continue;
 	
 	masspair_vector.push_back( std::make_pair( mass , std::make_pair( i , j ) ) );
 	

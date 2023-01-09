@@ -96,11 +96,11 @@ namespace Helper {
 
   struct compare
   {
-    valuetagpair thevpair;
-    compare(valuetagpair const &i): thevpair(i) {}
+    float masspair;
+    compare(float const &i): masspair(i) {}
     
     bool operator()(valuetagpair const &i) {
-      return (i.first == thevpair.first);
+      return (i.first == masspair);
     }
   };
   
