@@ -64,22 +64,13 @@ std::vector<std::string> TnP_variables = {
   //"Jet_pt"
 };
 
-// assigning pdgid for easy identification
+// tnp electron kinematics
 template<typename T>
-auto tnpkin( T &df , Helper::config_t &cfg , const std::string &flavor ){
+auto tnpkin_ele( T &df , Helper::config_t &cfg ){
 
   using namespace ROOT::VecOps;
-
-  int id_ = ( flavor == "Electron" ) ? 11 : 12;
-
-  // input variables
-  std::string lep_pt = flavor+"_pt";
-
-  //std::cout<<"lep_pdgid = "<<lep_pdgid<<std::endl;
-  //cfg.outputVar.push_back(flavor+"_pdgId");
-
-  // electron kinematics
-  auto elekin = [&cfg,&id_]( const RVec<int>& tp_idx,
+  
+  auto tnp_kin_ele = [&cfg]( const RVec<int>& tp_idx,
 			     const RVec<float>& lepton_pt,
 			     const RVec<float>& lepton_eta,
 			     const RVec<float>& lepton_phi,
@@ -92,21 +83,62 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &flavor ){
     
     for ( auto& it : tp_idx ){
       
-      int id = ( lepton_charge[it] < 0 ) ? id_*(-1) : id_;
-      tp_pdgid.push_back( id );
-      
       tp_pt.push_back( lepton_pt[it] );
       tp_eta.push_back( lepton_eta[it] );
       tp_phi.push_back( lepton_phi[it] );
       tp_mass.push_back( lepton_mass[it] );
+      tp_pdgid.push_back( 11*(lepton_charge[it]) );
       tp_wp.push_back( lepton_wp[it] );
     }
-
+    
     auto out = std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp );
   };
+  
+  return df.Define(
+		   "thetag" ,
+		   tnp_kin_ele ,
+		   {
+		     "Tag_Idx" ,
+		     "Electron_pt",
+		     "Electron_eta",
+		     "Electron_phi",
+		     "Electron_mass",
+		     "Electron_charge",
+		     "Electron_cutBasedId" }
+		   );
+  
+    /*
+    .Define( "theprobe" , tnp_kin_ele , { "Probe_Idx" ,
+					  "Electron_pt",
+					  "Electron_eta",
+					  "Electron_phi",
+					  "Electron_mass",
+					  "Electron_charge",
+					  "Electron_cutBasedId" }
+      )
+    .Define( "Tag_pt" , "std::get<0>(thetag)" )
+    .Define( "Tag_eta" , "std::get<1>(thetag)" )
+    .Define( "Tag_phi" , "std::get<2>(thetag)" )
+    .Define( "Tag_mass" , "std::get<3>(thetag)" )
+    .Define( "Tag_pdgId" , "std::get<4>(thetag)" )
+    .Define( "Tag_wp" , "std::get<5>(thetag)" )
+    .Define( "Probe_pt" , "std::get<0>(theprobe)" )
+    .Define( "Probe_eta" , "std::get<1>(theprobe)" )
+    .Define( "Probe_phi" , "std::get<2>(theprobe)" )
+    .Define( "Probe_mass" , "std::get<3>(theprobe)" )
+    .Define( "Probe_pdgId" , "std::get<4>(theprobe)" )
+    .Define( "Probe_wp" , "std::get<5>(theprobe)" );
+    */
+}
 
-  // muon kinematics
-  auto ukin = [&cfg,&id_]( const RVec<int>& tp_idx,
+/*
+// tnp muon kinematics
+template<typename T>
+auto tnpkin_u( T &df , Helper::config_t &cfg ){
+  
+  using namespace ROOT::VecOps;
+  
+  auto tnp_kin_u = [&cfg]( const RVec<int>& tp_idx,
 			   const RVec<float>& lepton_pt,
 			   const RVec<float>& lepton_eta,
 			   const RVec<float>& lepton_phi,
@@ -119,44 +151,30 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &flavor ){
     RVec<float> tp_pt, tp_eta, tp_phi, tp_mass;
     RVec<int> tp_pdgid, tp_wp;
     
-    // loop for tag                                                                                                                                                                                                                                                                                                          
     for ( auto& it : tp_idx ){
-      
-      int id = ( lepton_charge[it] < 0 ) ? id_*(-1) : id_;
-      tp_pdgid.push_back( id );
       
       tp_pt.push_back( lepton_pt[it] );
       tp_eta.push_back( lepton_eta[it] );
       tp_phi.push_back( lepton_phi[it] );
       tp_mass.push_back( lepton_mass[it] );
+      tp_pdgid.push_back( 13*(lepton_charge[it]) );
       tp_wp.push_back( lepton_loose[it]*1 + lepton_soft[it]*2 + lepton_tight[it]*4 ); // 
     }
     
     auto out = std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp );
   };
   
-  // symmetry breaking here
-  if ( flavor == "Electron" ){
-  
-    df = df.Define( "thetag" , elekin , { "Tag_Idx" ,
-					  "Electron_pt",
-					  "Electron_eta",
-					  "Electron_phi",
-					  "Electron_mass",
-					  "Electron_charge",
-					  "Electron_cutBasedId" }
-      )
-      .Define( "theprobe" , elekin , { "Probe_Idx" ,
-				       "Electron_pt",
-				       "Electron_eta",
-				       "Electron_phi",
-				       "Electron_mass",
-				       "Electron_charge",
-				       "Electron_cutBasedId" } );
-  }
-  else if ( flavor == "Muon" ){
-    
-    df = df.Define( "thetag" , ukin , { "Tag_Idx" ,
+  return df.Define( "thetag" , tnp_kin_u , { "Tag_Idx" ,
+					     "Muon_pt",
+					     "Muon_eta",
+					     "Muon_phi",
+					     "Muon_mass",
+					     "Muon_charge",
+					     "Muon_looseId",
+					     "Muon_softId",
+					     "Muon_tightId" }
+    )
+    .Define( "theprobe" , tnp_kin_u , { "Probe_Idx" ,
 					"Muon_pt",
 					"Muon_eta",
 					"Muon_phi",
@@ -164,24 +182,7 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &flavor ){
 					"Muon_charge",
 					"Muon_looseId",
 					"Muon_softId",
-					"Muon_tightId" }
-      )
-      .Define( "theprobe" , ukin , { "Probe_Idx" ,
-				     "Muon_pt",
-				     "Muon_eta",
-				     "Muon_phi",
-				     "Muon_mass",
-				     "Muon_charge",
-				     "Muon_looseId",
-				     "Muon_softId",
-				     "Muon_tightId" } );
-  }
-  else{
-    std::cout<<"ERROR : Dude, Baskin Robin wanna know your flavor"<<std::endl;
-    return df;
-  }
-  
-  return df
+					"Muon_tightId" } )
     .Define( "Tag_pt" , "std::get<0>(thetag)" )
     .Define( "Tag_eta" , "std::get<1>(thetag)" )
     .Define( "Tag_phi" , "std::get<2>(thetag)" )
@@ -196,6 +197,7 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &flavor ){
     .Define( "Probe_wp" , "std::get<5>(theprobe)" )
     ;
 }
+*/
 
 
 // TnP WORKFLOW
@@ -346,7 +348,7 @@ auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
     
   }
   else{
-    std::cout<<"Error, no flavor detected"<<std::endl;
+    std::cout<<"Error : Baskin Rabon wanna know your flavor"<<std::endl;
     return df;
   } 
 }
