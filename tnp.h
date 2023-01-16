@@ -8,7 +8,19 @@ std::vector<std::string> TnP_variables = {
   "nTnP_pair",
   "TnP_mass",
   "Tag_Idx",
-  "Probe_Idx"
+  "Probe_Idx",
+  "Tag_pt",
+  "Tag_eta",
+  "Tag_phi",
+  "Tag_mass",
+  "Tag_pdgId",
+  "Tag_wp",
+  "Probe_pt",
+  "Probe_eta",
+  "Probe_phi",
+  "Probe_mass",
+  "Probe_pdgId",
+  "Probe_wp"
   //"mcTrue",
   //"weight",
   //"tag_Ele_trigMVA",
@@ -58,41 +70,133 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &flavor ){
 
   using namespace ROOT::VecOps;
 
-  int id = ( flavor == "Electron" ) ? 11 : 12;
-  //std::string lep_pdgid = flavor+"_pdgId";
-  
+  int id_ = ( flavor == "Electron" ) ? 11 : 12;
+
+  // input variables
+  std::string lep_pt = flavor+"_pt";
+
   //std::cout<<"lep_pdgid = "<<lep_pdgid<<std::endl;
   //cfg.outputVar.push_back(flavor+"_pdgId");
 
-  // make kinematics
-  auto kin = [&cfg]( const RVec<int>& tag_idx,
-		     const RVec<int>& probe_idx,
-		     const RVec<float>& lepton_pt,
-		     const RVec<float>& lepton_eta,
-		     const RVec<float>& lepton_phi,
-		     const RVec<float>& lepton_mass,
-		     const RVec<float>& lepton_charge,
-		     const RVec<int>& lepton_wp
-		     ){
-    RVec<float> tag_pt, tag_eta, tag_phi, tag_mass;
-    RVec<float>	probe_pt, probe_eta, probe_phi, probe_mass;
-    RVec<int> tag_pdgid, probe_pdgid, tag_wp, probe_wp;
+  // electron kinematics
+  auto elekin = [&cfg,&id_]( const RVec<int>& tp_idx,
+			     const RVec<float>& lepton_pt,
+			     const RVec<float>& lepton_eta,
+			     const RVec<float>& lepton_phi,
+			     const RVec<float>& lepton_mass,
+			     const RVec<float>& lepton_charge,
+			     const RVec<int>& lepton_wp
+			     ){
+    RVec<float> tp_pt, tp_eta, tp_phi, tp_mass;
+    RVec<int> tp_pdgid, tp_wp;
+    
+    for ( auto& it : tp_idx ){
+      
+      int id = ( lepton_charge[it] < 0 ) ? id_*(-1) : id_;
+      tp_pdgid.push_back( id );
+      
+      tp_pt.push_back( lepton_pt[it] );
+      tp_eta.push_back( lepton_eta[it] );
+      tp_phi.push_back( lepton_phi[it] );
+      tp_mass.push_back( lepton_mass[it] );
+      tp_wp.push_back( lepton_wp[it] );
+    }
 
-    // loop for tag
-    for ( auto& it : tag_idx ){
+    auto out = std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp );
+  };
+
+  // muon kinematics
+  auto ukin = [&cfg,&id_]( const RVec<int>& tp_idx,
+			   const RVec<float>& lepton_pt,
+			   const RVec<float>& lepton_eta,
+			   const RVec<float>& lepton_phi,
+			   const RVec<float>& lepton_mass,
+			   const RVec<float>& lepton_charge,
+			   const RVec<int>& lepton_loose,
+			   const RVec<int>& lepton_soft,
+			   const RVec<int>& lepton_tight
+			   ){
+    RVec<float> tp_pt, tp_eta, tp_phi, tp_mass;
+    RVec<int> tp_pdgid, tp_wp;
+    
+    // loop for tag                                                                                                                                                                                                                                                                                                          
+    for ( auto& it : tp_idx ){
       
-      id = ( it < 0 ) ? id*(-1) : id;
+      int id = ( lepton_charge[it] < 0 ) ? id_*(-1) : id_;
+      tp_pdgid.push_back( id );
       
-      tag_pt.push_back( lepton_pt[it] );
-      tag_eta.push_back( lepton_eta[it] );
-      tag_phi.push_back( lepton_phi[it] );
-      tag_mass.push_back( lepton_mass[it] );
-      tag_pdgid.push_back( id )
-	}
+      tp_pt.push_back( lepton_pt[it] );
+      tp_eta.push_back( lepton_eta[it] );
+      tp_phi.push_back( lepton_phi[it] );
+      tp_mass.push_back( lepton_mass[it] );
+      tp_wp.push_back( lepton_loose[it]*1 + lepton_soft[it]*2 + lepton_tight[it]*4 ); // 
+    }
+    
+    auto out = std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp );
   };
   
-  return df.Define( lep_pdgid , pdgId , { lep_pdgid } );
+  // symmetry breaking here
+  if ( flavor == "Electron" ){
+  
+    df = df.Define( "thetag" , elekin , { "Tag_Idx" ,
+					  "Electron_pt",
+					  "Electron_eta",
+					  "Electron_phi",
+					  "Electron_mass",
+					  "Electron_charge",
+					  "Electron_cutBasedId" }
+      )
+      .Define( "theprobe" , elekin , { "Probe_Idx" ,
+				       "Electron_pt",
+				       "Electron_eta",
+				       "Electron_phi",
+				       "Electron_mass",
+				       "Electron_charge",
+				       "Electron_cutBasedId" } );
+  }
+  else if ( flavor == "Muon" ){
+    
+    df = df.Define( "thetag" , ukin , { "Tag_Idx" ,
+					"Muon_pt",
+					"Muon_eta",
+					"Muon_phi",
+					"Muon_mass",
+					"Muon_charge",
+					"Muon_looseId",
+					"Muon_softId",
+					"Muon_tightId" }
+      )
+      .Define( "theprobe" , ukin , { "Probe_Idx" ,
+				     "Muon_pt",
+				     "Muon_eta",
+				     "Muon_phi",
+				     "Muon_mass",
+				     "Muon_charge",
+				     "Muon_looseId",
+				     "Muon_softId",
+				     "Muon_tightId" } );
+  }
+  else{
+    std::cout<<"ERROR : Dude, Baskin Robin wanna know your flavor"<<std::endl;
+    return df;
+  }
+  
+  return df
+    .Define( "Tag_pt" , "std::get<0>(thetag)" )
+    .Define( "Tag_eta" , "std::get<1>(thetag)" )
+    .Define( "Tag_phi" , "std::get<2>(thetag)" )
+    .Define( "Tag_mass" , "std::get<3>(thetag)" )
+    .Define( "Tag_pdgId" , "std::get<4>(thetag)" )
+    .Define( "Tag_wp" , "std::get<5>(thetag)" )
+    .Define( "Probe_pt" , "std::get<0>(theprobe)" )
+    .Define( "Probe_eta" , "std::get<1>(theprobe)" )
+    .Define( "Probe_phi" , "std::get<2>(theprobe)" )
+    .Define( "Probe_mass" , "std::get<3>(theprobe)" )
+    .Define( "Probe_pdgId" , "std::get<4>(theprobe)" )
+    .Define( "Probe_wp" , "std::get<5>(theprobe)" )
+    ;
 }
+
 
 // TnP WORKFLOW
 // output the pair kinematic, mass, and idx
@@ -165,10 +269,6 @@ auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
 	//std::cout<<"The mass is "<<mass<<std::endl;
 	
 	if ( (lepton_charge[i]*lepton_charge[j]) >0 ) continue;
-
-	//valuetagpair valuepair = std::make_pair( mass , std::make_pair( i , j ) );
-
-	//if ( ( masspair_vector.size() !=0 ) && (std::any_of(masspair_vector.begin(), masspair_vector.end(), Helper::compare(valuepair))) ) continue;
 
 	if ( std::any_of( masspair_vector.begin(), masspair_vector.end(), Helper::compare(mass) ) ) continue;
 	
