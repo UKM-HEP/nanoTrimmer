@@ -64,8 +64,85 @@ std::vector<std::string> TnP_variables = {
   //"Jet_pt"
 };
 
+template <typename T>
+auto makeLorentzVector( T &df , const std::string &col ) {
+
+    using namespace ROOT::VecOps;
+    
+    auto makevector = [&col](
+			     const RVec<float>& obj_pt,
+			     const RVec<float>& obj_eta,
+			     const RVec<float>& obj_phi,
+			     const RVec<float>& obj_mass
+			     )
+    {
+      std::vector<ROOT::Math::PtEtaPhiMVector> out;
+      
+      for (unsigned int i = 0 ; i < obj_pt.size(); i++ )
+	out.emplace_back( Helper::makeLV<float>( obj_pt[i] , obj_eta[i] , obj_phi[i] , obj_mass[i] ) );
+      
+      return out;
+    };
+    
+    return df.Define( col+"_4v" , makevector , {
+	col+"_pt",
+	col+"_eta",
+	col+"_phi",
+	col+"_mass"
+      } );
+}
 
 
+template <typename T>
+auto matching( T &df , Helper::config_t &cfg , const std::string &flavor, const std::string &object ) {
+  
+  using namespace ROOT::VecOps;
+
+  // no other flavor then electron and muon are usually used in HEP analysis
+  int theId = ( flavor == "Electron" ) ? 11 : 13;
+  
+  auto ismatched = [&cfg,&theId](
+				 const RVec<float>& lepton_eta,
+				 const RVec<float>& lepton_phi,
+				 //const RVec<int>& obj_id,
+				 const RVec<float>& obj_eta,
+				 const RVec<float>& obj_phi
+				 )
+  {
+    // Get indices of all possible combinations
+    auto comb = Combinations( lepton_eta , obj_eta );
+    const auto numComb = comb[0].size();
+    RVec<int> ismatch(lepton_eta.size(),0);
+    
+    for (size_t i = 0 ; i < numComb ; i++) {
+      const auto ilep = comb[0][i];
+      const auto iobj = comb[1][i];
+      
+      //if ( abs(obj_id[iobj]) != theId ) continue;
+      const auto deltarS = pow(lepton_eta[ilep] - obj_eta[iobj] , 2) + pow(Helper::DeltaPhi(lepton_phi[ilep], obj_phi[iobj] ), 2);
+      
+      if ( deltarS < 0.1 ){
+	ismatch[ilep] = 1;
+	continue;
+      }
+    }
+    
+    return ismatch;
+  };
+
+  std::string v_out = flavor+"_is"+object+"_matched";
+  cfg.outputVar.emplace_back( v_out );
+  
+  return df
+    .Define( v_out , ismatched , {
+	flavor+"_eta" ,
+	flavor+"_phi" ,
+	//object+"_Id",
+	object+"_eta",
+	object+"_phi",
+      }
+      );   
+}
 
 // TnP WORKFLOW
 // output the pair kinematic, mass, and idx
@@ -279,119 +356,6 @@ auto tnpkin_ele( T &df , Helper::config_t &cfg ){
 }
 
 
-*/
-
-/*
-// tnp muon kinematics
-template<typename T>
-auto tnpkin_u( T &df , Helper::config_t &cfg ){
-  
-  using namespace ROOT::VecOps;
-  
-  auto tnp_kin_u = [&cfg]( const RVec<int>& tp_idx,
-			   const RVec<float>& lepton_pt,
-			   const RVec<float>& lepton_eta,
-			   const RVec<float>& lepton_phi,
-			   const RVec<float>& lepton_mass,
-			   const RVec<float>& lepton_charge,
-			   const RVec<int>& lepton_loose,
-			   const RVec<int>& lepton_soft,
-			   const RVec<int>& lepton_tight
-			   ){
-    RVec<float> tp_pt, tp_eta, tp_phi, tp_mass;
-    RVec<int> tp_pdgid, tp_wp;
-    
-    for ( auto& it : tp_idx ){
-      
-      tp_pt.push_back( lepton_pt[it] );
-      tp_eta.push_back( lepton_eta[it] );
-      tp_phi.push_back( lepton_phi[it] );
-      tp_mass.push_back( lepton_mass[it] );
-      tp_pdgid.push_back( 13*(lepton_charge[it]) );
-      tp_wp.push_back( lepton_loose[it]*1 + lepton_soft[it]*2 + lepton_tight[it]*4 ); // 
-    }
-    
-    auto out = std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp );
-  };
-  
-  return df.Define( "thetag" , tnp_kin_u , { "Tag_Idx" ,
-					     "Muon_pt",
-					     "Muon_eta",
-					     "Muon_phi",
-					     "Muon_mass",
-					     "Muon_charge",
-					     "Muon_looseId",
-					     "Muon_softId",
-					     "Muon_tightId" }
-    )
-    .Define( "theprobe" , tnp_kin_u , { "Probe_Idx" ,
-					"Muon_pt",
-					"Muon_eta",
-					"Muon_phi",
-					"Muon_mass",
-					"Muon_charge",
-					"Muon_looseId",
-					"Muon_softId",
-					"Muon_tightId" } )
-    .Define( "Tag_pt" , "std::get<0>(thetag)" )
-    .Define( "Tag_eta" , "std::get<1>(thetag)" )
-    .Define( "Tag_phi" , "std::get<2>(thetag)" )
-    .Define( "Tag_mass" , "std::get<3>(thetag)" )
-    .Define( "Tag_pdgId" , "std::get<4>(thetag)" )
-    .Define( "Tag_wp" , "std::get<5>(thetag)" )
-    .Define( "Probe_pt" , "std::get<0>(theprobe)" )
-    .Define( "Probe_eta" , "std::get<1>(theprobe)" )
-    .Define( "Probe_phi" , "std::get<2>(theprobe)" )
-    .Define( "Probe_mass" , "std::get<3>(theprobe)" )
-    .Define( "Probe_pdgId" , "std::get<4>(theprobe)" )
-    .Define( "Probe_wp" , "std::get<5>(theprobe)" )
-    ;
-}
-*/
-
-
-
-
-
-/*
-
-  if ( cfg.year == "2016" ) {
-    cfg.outputVar.push_back("Probe_mvaSpring16GP_WP90");
-    cfg.outputVar.push_back("Tag_mvaSpring16GP");
-    cfg.outputVar.push_back("Probe_cutBased_HLTPreSel");
-  }
-
-  // Tag pt cuts are already at 2 GeV above trigger threshold, but no eta cut applied for 2016
-  std::string tagCut="1==1";
-  if ( cfg.year == "2016" ) tagCut="abs(Tag_eta)<2.07";
-
-  auto df1 = df
-    .Filter( "abs(Tag_pdgId)!=13 && abs(Probe_pdgId)!=13"      , " --> Tag and Probe are electron"      )
-    .Filter( "abs(Probe_eta)<2.5"                              , " --> Probe candidate skim"            ) 
-    .Filter( "!(abs(Tag_eta)>= 1.4442 && abs(Tag_eta)<=1.566)" , " --> Tag candidate eta skim"          )
-    .Filter( tagCut                                            , " --> Tag candidate trig skim : "+tagCut )
-    ;
-
-  // dataset specific
-  auto df2 = df1
-    .Define( "mcTrue" , (cfg.isMC) ? "Tag_isGenMatched*Probe_isGenMatched>0" : "1" )
-    .Define( "weight" , (cfg.isMC) ? "baseW*genWeight*puWeight" : "1"                  )
-    ;
-  auto df3 = (cfg.isMC) ? df2 : df2.Filter( "TnP_trigger==1" , " --> data is matched to HLT filter" );
-
-  // Define variables
-  auto df_out = df3
-    .Define( "tag_Ele_trigMVA" , "Tag_mvaFall17V1Iso"         )
-    .Define( "event_met_pfmet" , "PuppiMET_pt"                )
-    .Define( "event_met_pfphi" , "PuppiMET_phi"               )
-    .Define( "pair_mass"       , "TnP_mass"                   )
-    .Define( "Tag_sc_eta"      , "Tag_deltaEtaSC+Tag_eta"     )
-    .Define( "Probe_sc_eta"    , "Probe_deltaEtaSC+Probe_eta" )
-    .Define( "Probe_3charge"   , "Probe_tightCharge==2"       )
-    ;
-  
-  return df_out;
-}
 */
 
 #endif

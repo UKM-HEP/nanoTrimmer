@@ -130,7 +130,7 @@ if __name__ == "__main__":
             outdirectory= '%s/%s_trim' %( output , pd_samples )
        
         outdirectory= '%s/%s_trim' %( output , pd_samples )
-
+        
         if not os.path.exists(outdirectory):
             os.system( "mkdir -p %s" %outdirectory )
         #else:
@@ -144,19 +144,23 @@ if __name__ == "__main__":
         count=0
         gcount=0
         rootfiles=[]
-        for ifile in glob.glob('%s/*' %isample ):
+        filelist = glob.glob('%s/*.root' %isample )
+        for ifile in filelist:
 
-            #if batch : ifile = 'root://eoscms.cern.ch/'+ifile
-            if batch : 
-                ifile = 'root://eosuser.cern.ch/'+ifile
-
-            if count != nfile:
+            if batch : ifile = 'root://eosuser.cern.ch/'+ifile
+            if count != nfile and count != len(filelist):
+                
+                #print(count)
+                #print(len(filelist))
+                
                 jobname = '%s/%s__part-%s.txt' %( outdirectory , pd_samples , gcount )
                 f=open( jobname , 'w' )
 
                 count+=1
                 rootfiles.append(ifile)
-            else:
+                
+            if count == nfile or count == len(filelist):
+                #print("i am here")
                 f.write( '\n'.join(rootfiles) )
                 f.close()
                 execute( outdirectory , jobname )

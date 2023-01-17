@@ -1,5 +1,6 @@
 #include "helper.h"
 #include "tnp.h"
+#include "input/input.h"
 
 int main(int argc, char **argv) {
 
@@ -23,8 +24,8 @@ int main(int argc, char **argv) {
   mycfg.input  = argv[1];
   mycfg.output = argv[2];
   //mycfg.outputVar = default_branches;
-  std::vector<std::string> out = Helper::makeList("data/out.dat");
-  std::vector<std::string> hlt = Helper::makeList("data/HLT.dat");
+  std::vector<std::string> out = Helper::makeList("input/out.dat");
+  std::vector<std::string> hlt = Helper::makeList("input/HLT.dat");
   mycfg.outputVar = Helper::joinVector( out , hlt );
   
   mycfg.isMC   = ( mycfg.input.find("Run") != std::string::npos || mycfg.input.find("JPsi") != std::string::npos ) ? false : true;
@@ -49,7 +50,7 @@ int main(int argc, char **argv) {
   ///////////////////////////////////////////////////////////////////////////////////////////
   // Skimming
   // event-level filter
-  df = df.Filter( "nJet>1"       , "keeping events with njet>5"      );
+  df = df.Filter( "nJet>1"       , "keeping events with njet>1"      );
   df = df.Filter( "nElectron>1"  , "keeping events with nelectron at least 2 electrons" );
   df = df.Filter( "nMuon>1"      , "keeping events with nmuon at least 2 muons"     );
 
@@ -64,11 +65,11 @@ int main(int argc, char **argv) {
   df = df.Filter( "Electron_pt2>10" , "events with electron2 pt > 10 GeV" );
   //df = df.Filter( "Muon_pt1>10" , "events with muon1 pt > 20 GeV" );
   //df = df.Filter( "Muon_pt2>10" , "events with muon2 pt > 20 GeV" );
-
-  // adding tnp variables
-  std::string flavor = "Electron";
+  
   //df = tnpvector( df , mycfg , flavor );
-  df = thekin( df );
+  //df = test( df );
+  
+  df = runningInput( df , mycfg );
   ///////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////
   

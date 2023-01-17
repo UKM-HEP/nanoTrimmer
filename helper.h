@@ -107,7 +107,7 @@ namespace Helper {
   /*
    * Compute the difference in the azimuth coordinate taking the boundary conditions at 2*pi into account.
    */
-  template <typename T>
+  template <typename T = float>
     float DeltaPhi(T v1, T v2, const T c = M_PI)
     {
       auto r = std::fmod(v2 - v1, 2.0 * c);
@@ -137,10 +137,15 @@ namespace Helper {
     std::string output;
 
     bool isMC;
-    std::vector<std::string> infiles;
-    std::vector<std::string> outputVar;
+    float Luminosity;
+    std::string HLT;
+    std::string Flavor;
+    std::string HLTobject;
     float kMaxMass;
     float kMinMass;
+
+    std::vector<std::string> infiles;
+    std::vector<std::string> outputVar;
   };
   
 } //helper
