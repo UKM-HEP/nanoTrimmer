@@ -67,9 +67,8 @@ int main(int argc, char **argv) {
 
   // adding tnp variables
   std::string flavor = "Electron";
-  df = tnpvector( df , mycfg , flavor );
-  df = tnpkin_ele( df , mycfg ); //( flavor == "Electron" ) ? tnpkin_ele( df , mycfg ) : tnpkin_u( df , mycfg );
-  
+  //df = tnpvector( df , mycfg , flavor );
+  df = thekin( df );
   ///////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////
   

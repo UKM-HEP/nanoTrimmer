@@ -9,18 +9,18 @@ std::vector<std::string> TnP_variables = {
   "TnP_mass",
   "Tag_Idx",
   "Probe_Idx",
-  "Tag_pt",
-  "Tag_eta",
-  "Tag_phi",
-  "Tag_mass",
-  "Tag_pdgId",
-  "Tag_wp",
-  "Probe_pt",
-  "Probe_eta",
-  "Probe_phi",
-  "Probe_mass",
-  "Probe_pdgId",
-  "Probe_wp"
+  //"Tag_pt",
+  //"Tag_eta",
+  //"Tag_phi",
+  //"Tag_mass",
+  //"Tag_pdgId",
+  //"Tag_wp",
+  //"Probe_pt",
+  //"Probe_eta",
+  //"Probe_phi",
+  //"Probe_mass",
+  //"Probe_pdgId",
+  //"Probe_wp"
   //"mcTrue",
   //"weight",
   //"tag_Ele_trigMVA",
@@ -64,41 +64,188 @@ std::vector<std::string> TnP_variables = {
   //"Jet_pt"
 };
 
+
+
+
+// TnP WORKFLOW
+// output the pair kinematic, mass, and idx
+template <typename T>
+auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
+
+  // https://github.com/latinos/LatinoAnalysis/blob/master/NanoGardener/python/modules/addTnpTree.py
+
+  using namespace ROOT::VecOps;
+
+  // dataset specific variables
+  cfg.outputVar = Helper::joinVector( cfg.outputVar , TnP_variables  );
+
+  // lambda function
+  auto maketnpvector  = [&cfg,&flavor](
+			 const RVec<float>& lepton_pt,
+			 const RVec<float>& lepton_eta,
+			 const RVec<float>& lepton_phi,
+			 const RVec<float>& lepton_mass,
+			 const RVec<int>& lepton_charge
+			 )
+  {
+    std::vector<valuetagpair> masspair_vector;
+    int npair;
+    RVec<float> masspair;
+    RVec<int> tag_idx, probe_idx;
+    
+    // tag loop
+    for (unsigned int i = 0 ; i < lepton_pt.size(); i++ ){
+      
+      // tag selection
+      if ( flavor == "Electron" ){
+	// Electron
+	if ( !( lepton_pt[i] > 25. && abs(lepton_eta[i]) < 2.5 ) ) continue;
+      }
+      else if ( flavor == "Muon" ){
+	// Muon
+	if ( !( lepton_pt[i] > 25. && abs(lepton_eta[i]) < 2.5 ) ) continue;
+      }
+      else{
+	std::cout<<"ERROR, Dude, something wrong"<<std::endl;
+      }
+      
+      ROOT::Math::PtEtaPhiMVector v1 = Helper::makeLV<float>( lepton_pt[i] , lepton_eta[i] , lepton_phi[i] , lepton_mass[i] );
+      
+      // probe loop
+      for (unsigned int j = 0 ; j < lepton_pt.size(); j++ ){
+
+	if (i == j) continue;
+	
+	// probe selection
+	if ( flavor == "Electron" ){
+	  // Electron
+	  if ( !( lepton_pt[i] > 15. && abs(lepton_eta[i]) < 2.5 ) ) continue;
+	}
+	else if ( flavor == "Muon" ){
+	  // Muon
+	  if ( !( lepton_pt[i] > 15. && abs(lepton_eta[i]) < 2.5 ) ) continue;
+	}
+	else{
+	  std::cout<<"ERROR : Baskin Robin wanna know your flavor."<<std::endl;
+	}
+	
+	ROOT::Math::PtEtaPhiMVector v2 = Helper::makeLV<float>( lepton_pt[j] , lepton_eta[j] , lepton_phi[j] , lepton_mass[j] );
+	
+	float mass = (v1 + v2).M();
+	
+	if ( ( mass > cfg.kMaxMass ) || ( mass < cfg.kMinMass ) ) continue;
+
+	//std::cout<<"The mass is "<<mass<<std::endl;
+	
+	if ( (lepton_charge[i]*lepton_charge[j]) >0 ) continue;
+
+	if ( std::any_of( masspair_vector.begin(), masspair_vector.end(), Helper::compare(mass) ) ) continue;
+	
+	masspair_vector.push_back( std::make_pair( mass , std::make_pair( i , j ) ) );
+	
+      } // end probe loop
+      
+    } // end tag loop
+    
+    // the first pair is closer to zmass
+    masspair_vector = Helper::IndexbyZmass(masspair_vector);
+    
+    // unpacking masspair vector information
+    npair = masspair_vector.size();
+    for (int k = 0 ; k < npair ; k++ ){
+      float themasspair = masspair_vector[k].first;
+      int thetag_idx = masspair_vector[k].second.first;
+      int theprobe_idx = masspair_vector[k].second.second;
+      
+      // Save the first, second and third pair of tag and probe
+      if (k>2) continue;
+
+      // mass pair
+      masspair.push_back( themasspair );
+      
+      // tag Idx
+      tag_idx.push_back( thetag_idx );
+
+      // probe Idx
+      probe_idx.push_back( theprobe_idx );      
+    } // end pair loop
+    
+    // output
+    auto out = std::make_tuple( npair , masspair , tag_idx , probe_idx );
+
+    return out;
+  };
+  
+  return df.Define(
+		   "maketnpvector" ,
+		   maketnpvector ,
+		   {
+		     flavor+"_pt",
+		     flavor+"_eta",
+		     flavor+"_phi",
+		     flavor+"_mass",
+		     flavor+"_charge"
+		   }
+		   )
+    .Define("nTnP_pair","std::get<0>(maketnpvector)")
+    .Define("TnP_mass","std::get<1>(maketnpvector)")
+    .Define("Tag_Idx","std::get<2>(maketnpvector)")
+    .Define("Probe_Idx","std::get<3>(maketnpvector)")
+    ;
+}
+
+template<typename T>
+auto thekin( T &df ){
+
+  using namespace ROOT::VecOps;
+  
+  auto makingvector = [&](
+		      const RVec<int>& tp_idx
+		      ){
+    RVec<int> tp_pdgid;
+    for ( unsigned int i =0 ; i < tp_idx.size() ; i++ ) tp_pdgid.push_back(11*(tp_idx[i]));
+  };
+  
+  return df.Define( "makingvector" , makingvector , { "Electron_charge" } );
+}
+
+/* 
 // tnp electron kinematics
 template<typename T>
 auto tnpkin_ele( T &df , Helper::config_t &cfg ){
 
   using namespace ROOT::VecOps;
   
-  auto tnp_kin_ele = [&cfg]( const RVec<int>& tp_idx,
-			     const RVec<float>& lepton_pt,
-			     const RVec<float>& lepton_eta,
-			     const RVec<float>& lepton_phi,
-			     const RVec<float>& lepton_mass,
-			     const RVec<float>& lepton_charge,
-			     const RVec<int>& lepton_wp
-			     ){
+  auto kin_maker_ele = [&cfg](
+			    const RVec<int>& tp_idx,
+			    const RVec<float>& lepton_pt,
+			    const RVec<float>& lepton_eta,
+			    const RVec<float>& lepton_phi,
+			    const RVec<float>& lepton_mass,
+			    const RVec<int>& lepton_charge,
+			    const RVec<int>& lepton_wp
+			    ){
     RVec<float> tp_pt, tp_eta, tp_phi, tp_mass;
     RVec<int> tp_pdgid, tp_wp;
     
-    for ( auto& it : tp_idx ){
+    for ( unsigned int i =0 ; i < tp_idx.size() ; i++ ){
       
-      tp_pt.push_back( lepton_pt[it] );
-      tp_eta.push_back( lepton_eta[it] );
-      tp_phi.push_back( lepton_phi[it] );
-      tp_mass.push_back( lepton_mass[it] );
-      tp_pdgid.push_back( 11*(lepton_charge[it]) );
-      tp_wp.push_back( lepton_wp[it] );
+      tp_pt.push_back( lepton_pt[i] );
+      tp_eta.push_back( lepton_eta[i] );
+      tp_phi.push_back( lepton_phi[i] );
+      tp_mass.push_back( lepton_mass[i] );
+      tp_pdgid.push_back( 11*(lepton_charge[i]) );
+      tp_wp.push_back( lepton_wp[i] );
     }
     
     auto out = std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp );
   };
   
   return df.Define(
-		   "thetag" ,
-		   tnp_kin_ele ,
+		   "tagger" ,
+		   kin_maker_ele ,
 		   {
-		     "Tag_Idx" ,
+		     "Tag_Idx",
 		     "Electron_pt",
 		     "Electron_eta",
 		     "Electron_phi",
@@ -107,7 +254,7 @@ auto tnpkin_ele( T &df , Helper::config_t &cfg ){
 		     "Electron_cutBasedId" }
 		   );
   
-    /*
+    
     .Define( "theprobe" , tnp_kin_ele , { "Probe_Idx" ,
 					  "Electron_pt",
 					  "Electron_eta",
@@ -128,8 +275,11 @@ auto tnpkin_ele( T &df , Helper::config_t &cfg ){
     .Define( "Probe_mass" , "std::get<3>(theprobe)" )
     .Define( "Probe_pdgId" , "std::get<4>(theprobe)" )
     .Define( "Probe_wp" , "std::get<5>(theprobe)" );
-    */
+    
 }
+
+
+*/
 
 /*
 // tnp muon kinematics
@@ -200,158 +350,8 @@ auto tnpkin_u( T &df , Helper::config_t &cfg ){
 */
 
 
-// TnP WORKFLOW
-// output the pair kinematic, mass, and idx
-template <typename T>
-auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
 
-  // https://github.com/latinos/LatinoAnalysis/blob/master/NanoGardener/python/modules/addTnpTree.py
 
-  using namespace ROOT::VecOps;
-
-  // dataset specific variables
-  cfg.outputVar = Helper::joinVector( cfg.outputVar , TnP_variables  );
-
-  // lambda function
-  auto maketnpvector  = [&cfg,&flavor](
-			 const RVec<float>& lepton_pt,
-			 const RVec<float>& lepton_eta,
-			 const RVec<float>& lepton_phi,
-			 const RVec<float>& lepton_mass,
-			 const RVec<int>& lepton_charge
-			 )
-  {
-    std::vector<valuetagpair> masspair_vector;
-    int npair;
-    RVec<float> masspair;
-    RVec<int> tag_idx, probe_idx;
-    
-    // tag loop
-    for (unsigned int i = 0 ; i < lepton_pt.size(); i++ ){
-      
-      // tag selection
-      if ( flavor == "Electron" ){
-	// Electron
-	if ( !( lepton_pt[i] > 25. && abs(lepton_eta[i]) < 2.5 ) ) continue;
-      }
-      else if ( flavor == "Muon" ){
-	// Muon
-	if ( !( lepton_pt[i] > 25. && abs(lepton_eta[i]) < 2.5 ) ) continue;
-      }
-      else{
-	std::cout<<"ERROR, Dude, something wrong"<<std::endl;
-      }
-      
-      ROOT::Math::PtEtaPhiMVector v1 = Helper::makeLV<float>( lepton_pt[i] , lepton_eta[i] , lepton_phi[i] , lepton_mass[i] );
-      
-      // probe loop
-      for (unsigned int j = 0 ; j < lepton_pt.size(); j++ ){
-
-	if (i == j) continue;
-	
-	// probe selection
-	if ( flavor == "Electron" ){
-	  // Electron
-	  if ( !( lepton_pt[i] > 15. && abs(lepton_eta[i]) < 2.5 ) ) continue;
-	}
-	else if ( flavor == "Muon" ){
-	  // Muon
-	  if ( !( lepton_pt[i] > 15. && abs(lepton_eta[i]) < 2.5 ) ) continue;
-	}
-	else{
-	  std::cout<<"ERROR, Dude, something wrong"<<std::endl;
-	}
-	
-	ROOT::Math::PtEtaPhiMVector v2 = Helper::makeLV<float>( lepton_pt[j] , lepton_eta[j] , lepton_phi[j] , lepton_mass[j] );
-	
-	float mass = (v1 + v2).M();
-	
-	if ( ( mass > cfg.kMaxMass ) || ( mass < cfg.kMinMass ) ) continue;
-
-	//std::cout<<"The mass is "<<mass<<std::endl;
-	
-	if ( (lepton_charge[i]*lepton_charge[j]) >0 ) continue;
-
-	if ( std::any_of( masspair_vector.begin(), masspair_vector.end(), Helper::compare(mass) ) ) continue;
-	
-	masspair_vector.push_back( std::make_pair( mass , std::make_pair( i , j ) ) );
-	
-      } // end probe loop
-      
-    } // end tag loop
-    
-    // the first pair is closer to zmass
-    masspair_vector = Helper::IndexbyZmass(masspair_vector);
-    
-    // unpacking masspair vector information
-    npair = masspair_vector.size();
-    for (int k = 0 ; k < npair ; k++ ){
-      float themasspair = masspair_vector[k].first;
-      int thetag_idx = masspair_vector[k].second.first;
-      int theprobe_idx = masspair_vector[k].second.second;
-      
-      // Save the first, second and third pair of tag and probe
-      if (k>2) continue;
-
-      // mass pair
-      masspair.push_back( themasspair );
-      
-      // tag Idx
-      tag_idx.push_back( thetag_idx );
-
-      // probe Idx
-      probe_idx.push_back( theprobe_idx );      
-    } // end pair loop
-    
-    // output
-    auto out = std::make_tuple( npair , masspair , tag_idx , probe_idx );
-
-    return out;
-  };
-
-  if ( flavor == "Electron" ){
-    return df.Define(
-		     "maketnpvector" ,
-		     maketnpvector ,
-		     {
-		       "Electron_pt",
-		       "Electron_eta",
-		       "Electron_phi",
-		       "Electron_mass",
-		       "Electron_charge"
-		     }
-		     )
-      .Define("nTnP_pair","std::get<0>(maketnpvector)")
-      .Define("TnP_mass","std::get<1>(maketnpvector)")
-      .Define("Tag_Idx","std::get<2>(maketnpvector)")
-      .Define("Probe_Idx","std::get<3>(maketnpvector)")
-
-      ;
-  }
-  else if ( flavor == "Muon"  ) {
-    return df.Define(
-                     "maketnpvector" ,
-                     maketnpvector ,
-                     {
-                       "Muon_pt",
-                       "Muon_eta",
-                       "Muon_phi",
-                       "Muon_mass",
-                       "Muon_charge"
-                     }
-                     )
-      .Define("nTnP_pair","std::get<0>(maketnpvector)")
-      .Define("TnP_mass","std::get<1>(maketnpvector)")
-      .Define("Tag_Idx","std::get<2>(maketnpvector)")
-      .Define("Probe_Idx","std::get<3>(maketnpvector)")
-      ;
-    
-  }
-  else{
-    std::cout<<"Error : Baskin Rabon wanna know your flavor"<<std::endl;
-    return df;
-  } 
-}
 
 /*
 
