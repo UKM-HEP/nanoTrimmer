@@ -19,7 +19,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(50000))
 
 # Define files of dataset
-files = FileUtils.loadListFromFile('/afs/cern.ch/work/s/shoh/analysis/opendata/CMSSW_5_3_32/src/workspace/AOD2NanoAOD/test/CMS_Run2012B_SingleMu_AOD_22Jan2013-v1_test.txt') # FileUtils.loadListFromFile("data/CMS_Run2012B_DoubleMuParked_AOD_22Jan2013-v1_10000_file_index.txt")
+files = FileUtils.loadListFromFile('/afs/cern.ch/work/s/shoh/analysis/opendata/CMSSW_5_3_32/src/workspace/AOD2NanoAOD/test/CMS_Run2012B_SingleElectron_AOD_22Jan2013-v1.txt') # FileUtils.loadListFromFile("data/CMS_Run2012B_DoubleMuParked_AOD_22Jan2013-v1_10000_file_index.txt")
 #files.extend(FileUtils.loadListFromFile("data/CMS_Run2012B_DoubleMuParked_AOD_22Jan2013-v1_20000_file_index.txt"))
 #files.extend(FileUtils.loadListFromFile("data/CMS_Run2012B_DoubleMuParked_AOD_22Jan2013-v1_20001_file_index.txt"))
 #files.extend(FileUtils.loadListFromFile("data/CMS_Run2012B_DoubleMuParked_AOD_22Jan2013-v1_20002_file_index.txt"))
@@ -51,6 +51,6 @@ process.aod2nanoaod = cms.EDAnalyzer("AOD2NanoAOD",
                                      HLTlist = cms.string("/afs/cern.ch/work/s/shoh/analysis/opendata/CMSSW_5_3_32/src/workspace/AOD2NanoAOD/data/HLT/HLT_Lepton_8TeV.txt")
 )
 process.TFileService = cms.Service(
-    "TFileService", fileName=cms.string("/afs/cern.ch/work/s/shoh/analysis/opendata/CMSSW_5_3_32/src/workspace/AOD2NanoAOD/test/test_CMS_Run2012B_SingleMu_AOD_22Jan2013-v1_test/CMS_Run2012B_SingleMu_AOD_22Jan2013-v1_test.root"))
+    "TFileService", fileName=cms.string("/afs/cern.ch/work/s/shoh/analysis/opendata/CMSSW_5_3_32/src/workspace/AOD2NanoAOD/test/test_CMS_Run2012B_SingleElectron_AOD_22Jan2013-v1/CMS_Run2012B_SingleElectron_AOD_22Jan2013-v1.root"))
 
 process.p = cms.Path(process.aod2nanoaod)

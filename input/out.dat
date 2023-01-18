@@ -35,5 +35,7 @@ Muon_pfRelIso03_all
 Muon_pfRelIso04_all
 Muon_tightId
 Muon_softId
+Muon_looseId
+Muon_cutBasedId
 Muon_jetIdx
 Muon_genPartIdx

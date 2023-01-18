@@ -141,8 +141,15 @@ namespace Helper {
     std::string HLT;
     std::string Flavor;
     std::string HLTobject;
+    float kMinTagPt;
+    float kMaxTagEta;
+    float kMinProbePt;
+    float kMaxProbeEta;
+    //float kProbeWP;
     float kMaxMass;
     float kMinMass;
+    float minDeltaR = 0.1;
+    int kWPTag;
 
     std::vector<std::string> infiles;
     std::vector<std::string> outputVar;

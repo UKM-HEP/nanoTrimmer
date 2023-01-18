@@ -4,11 +4,11 @@
 #include "helper.h"
 
 // tnp variable output definition
-std::vector<std::string> TnP_variables = {
-  "nTnP_pair",
-  "TnP_mass",
-  "Tag_Idx",
-  "Probe_Idx",
+//std::vector<std::string> TnP_variables = {
+//  "nTnP_pair",
+//  "TnP_mass",
+//  "Tag_Idx",
+//  "Probe_Idx",
   //"Tag_pt",
   //"Tag_eta",
   //"Tag_phi",
@@ -62,7 +62,7 @@ std::vector<std::string> TnP_variables = {
   //"Probe_jetIdx",
   //"nJet",
   //"Jet_pt"
-};
+//};
 
 template <typename T>
 auto makeLorentzVector( T &df , const std::string &col ) {
@@ -94,7 +94,10 @@ auto makeLorentzVector( T &df , const std::string &col ) {
 
 
 template <typename T>
-auto matching( T &df , Helper::config_t &cfg , const std::string &flavor, const std::string &object ) {
+auto matching( T &df , Helper::config_t &cfg ) {
+
+  std::string flavor = cfg.Flavor;
+  std::string object = cfg.HLTobject;
   
   using namespace ROOT::VecOps;
 
@@ -121,7 +124,7 @@ auto matching( T &df , Helper::config_t &cfg , const std::string &flavor, const 
       //if ( abs(obj_id[iobj]) != theId ) continue;
       const auto deltarS = pow(lepton_eta[ilep] - obj_eta[iobj] , 2) + pow(Helper::DeltaPhi(lepton_phi[ilep], obj_phi[iobj] ), 2);
       
-      if ( deltarS < 0.1 ){
+      if ( deltarS < cfg.minDeltaR ){
 	ismatch[ilep] = 1;
 	continue;
       }
@@ -130,7 +133,7 @@ auto matching( T &df , Helper::config_t &cfg , const std::string &flavor, const 
     return ismatch;
   };
 
-  std::string v_out = flavor+"_is"+object+"_matched";
+  std::string v_out = (object != "GenPart") ? flavor+"_is"+object+"_matched" : flavor+"_mcTruth" ;
   cfg.outputVar.emplace_back( v_out );
   
   return df
@@ -147,23 +150,22 @@ auto matching( T &df , Helper::config_t &cfg , const std::string &flavor, const 
 // TnP WORKFLOW
 // output the pair kinematic, mass, and idx
 template <typename T>
-auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
+auto tnpvector(T &df , Helper::config_t &cfg ) {
 
   // https://github.com/latinos/LatinoAnalysis/blob/master/NanoGardener/python/modules/addTnpTree.py
 
-  using namespace ROOT::VecOps;
+  std::string flavor = cfg.Flavor;
+  std::string object = cfg.HLTobject;
 
-  // dataset specific variables
-  cfg.outputVar = Helper::joinVector( cfg.outputVar , TnP_variables  );
+  using namespace ROOT::VecOps;
 
   // lambda function
   auto maketnpvector  = [&cfg,&flavor](
-			 const RVec<float>& lepton_pt,
-			 const RVec<float>& lepton_eta,
-			 const RVec<float>& lepton_phi,
-			 const RVec<float>& lepton_mass,
-			 const RVec<int>& lepton_charge
-			 )
+				       const std::vector<ROOT::Math::PtEtaPhiMVector> lepton_4v,
+				       const RVec<int>& lepton_charge,
+				       const RVec<int>& lepton_wp,
+				       const RVec<int>& ismatch
+				       )
   {
     std::vector<valuetagpair> masspair_vector;
     int npair;
@@ -171,48 +173,36 @@ auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
     RVec<int> tag_idx, probe_idx;
     
     // tag loop
-    for (unsigned int i = 0 ; i < lepton_pt.size(); i++ ){
-      
+    for (unsigned int i = 0 ; i < lepton_4v.size(); i++ ){
+
+      ROOT::Math::PtEtaPhiMVector tag = lepton_4v[i];
+	
       // tag selection
-      if ( flavor == "Electron" ){
-	// Electron
-	if ( !( lepton_pt[i] > 25. && abs(lepton_eta[i]) < 2.5 ) ) continue;
-      }
-      else if ( flavor == "Muon" ){
-	// Muon
-	if ( !( lepton_pt[i] > 25. && abs(lepton_eta[i]) < 2.5 ) ) continue;
-      }
-      else{
-	std::cout<<"ERROR, Dude, something wrong"<<std::endl;
-      }
-      
-      ROOT::Math::PtEtaPhiMVector v1 = Helper::makeLV<float>( lepton_pt[i] , lepton_eta[i] , lepton_phi[i] , lepton_mass[i] );
+      if ( !( tag.Pt() > cfg.kMinTagPt && abs(tag.Eta()) < cfg.kMaxTagEta ) ) continue;
+
+      // match?
+      if (!ismatch[i]) continue;
+
+      // pass the tight wp?
+      if ( lepton_wp[i] != cfg.kWPTag ) continue;
       
       // probe loop
-      for (unsigned int j = 0 ; j < lepton_pt.size(); j++ ){
+      for (unsigned int j = 0 ; j < lepton_4v.size(); j++ ){
+
+	ROOT::Math::PtEtaPhiMVector probe = lepton_4v[j];
 
 	if (i == j) continue;
 	
 	// probe selection
-	if ( flavor == "Electron" ){
-	  // Electron
-	  if ( !( lepton_pt[i] > 15. && abs(lepton_eta[i]) < 2.5 ) ) continue;
-	}
-	else if ( flavor == "Muon" ){
-	  // Muon
-	  if ( !( lepton_pt[i] > 15. && abs(lepton_eta[i]) < 2.5 ) ) continue;
-	}
-	else{
-	  std::cout<<"ERROR : Baskin Robin wanna know your flavor."<<std::endl;
-	}
+	if ( !( probe.Pt() > cfg.kMinProbePt && abs(probe.Eta()) < cfg.kMaxProbeEta ) ) continue;
 	
-	ROOT::Math::PtEtaPhiMVector v2 = Helper::makeLV<float>( lepton_pt[j] , lepton_eta[j] , lepton_phi[j] , lepton_mass[j] );
-	
-	float mass = (v1 + v2).M();
+	float mass = (tag + probe).M();
+
+	std::cout<<"The invariant mass before passing is "<<mass<<std::endl;
 	
 	if ( ( mass > cfg.kMaxMass ) || ( mass < cfg.kMinMass ) ) continue;
 
-	//std::cout<<"The mass is "<<mass<<std::endl;
+	std::cout<<"The invariant mass passing is "<<mass<<std::endl;
 	
 	if ( (lepton_charge[i]*lepton_charge[j]) >0 ) continue;
 
@@ -235,7 +225,7 @@ auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
       int theprobe_idx = masspair_vector[k].second.second;
       
       // Save the first, second and third pair of tag and probe
-      if (k>2) continue;
+      //if (k>2) continue;
 
       // mass pair
       masspair.push_back( themasspair );
@@ -252,16 +242,27 @@ auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
 
     return out;
   };
+
+  // tnp specifics variables
+  std::vector<std::string> tnp_out = {
+    "nTnP_pair",
+    "TnP_mass",
+    "Tag_Idx",
+    "Probe_Idx",
+  };
+  
+  cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
+
+  std::string matcher = (cfg.isMC) ? flavor+"_mcTruth" : flavor+"_is"+object+"_matched";
   
   return df.Define(
 		   "maketnpvector" ,
 		   maketnpvector ,
 		   {
-		     flavor+"_pt",
-		     flavor+"_eta",
-		     flavor+"_phi",
-		     flavor+"_mass",
-		     flavor+"_charge"
+		     flavor+"_4v",
+		     flavor+"_charge",
+		     flavor+"_cutBasedId",
+		     matcher
 		   }
 		   )
     .Define("nTnP_pair","std::get<0>(maketnpvector)")
@@ -271,91 +272,76 @@ auto tnpvector(T &df , Helper::config_t &cfg , const std::string &flavor ) {
     ;
 }
 
+// tnp kinematics
 template<typename T>
-auto thekin( T &df ){
+auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
+
+  std::string flavor = cfg.Flavor;
+  std::string object = cfg.HLTobject;
 
   using namespace ROOT::VecOps;
   
-  auto makingvector = [&](
-		      const RVec<int>& tp_idx
-		      ){
-    RVec<int> tp_pdgid;
-    for ( unsigned int i =0 ; i < tp_idx.size() ; i++ ) tp_pdgid.push_back(11*(tp_idx[i]));
-  };
-  
-  return df.Define( "makingvector" , makingvector , { "Electron_charge" } );
-}
-
-/* 
-// tnp electron kinematics
-template<typename T>
-auto tnpkin_ele( T &df , Helper::config_t &cfg ){
-
-  using namespace ROOT::VecOps;
-  
-  auto kin_maker_ele = [&cfg](
-			    const RVec<int>& tp_idx,
-			    const RVec<float>& lepton_pt,
-			    const RVec<float>& lepton_eta,
-			    const RVec<float>& lepton_phi,
-			    const RVec<float>& lepton_mass,
-			    const RVec<int>& lepton_charge,
-			    const RVec<int>& lepton_wp
-			    ){
+  auto maketnpkin = [&flavor](
+			const std::vector<ROOT::Math::PtEtaPhiMVector> lepton_4v,
+			const RVec<int>& tp_idx,
+			const RVec<int>& lepton_charge,
+			const RVec<int>& lepton_wp,
+			const RVec<int>& lepton_ismatch
+			){
     RVec<float> tp_pt, tp_eta, tp_phi, tp_mass;
-    RVec<int> tp_pdgid, tp_wp;
+    RVec<int> tp_pdgid, tp_wp, tp_match;
+    
+    int theId = ( flavor == "Electron" ) ? 11 : 13;
     
     for ( unsigned int i =0 ; i < tp_idx.size() ; i++ ){
       
-      tp_pt.push_back( lepton_pt[i] );
-      tp_eta.push_back( lepton_eta[i] );
-      tp_phi.push_back( lepton_phi[i] );
-      tp_mass.push_back( lepton_mass[i] );
-      tp_pdgid.push_back( 11*(lepton_charge[i]) );
-      tp_wp.push_back( lepton_wp[i] );
+      tp_pt.emplace_back( lepton_4v[i].Pt() );
+      tp_eta.emplace_back( lepton_4v[i].Eta() );
+      tp_phi.emplace_back( lepton_4v[i].Phi() );
+      tp_mass.emplace_back( lepton_4v[i].M() );
+      tp_pdgid.emplace_back( theId*(lepton_charge[i]) );
+      tp_wp.emplace_back( lepton_wp[i] );
+      tp_match.emplace_back( lepton_ismatch[i] );
     }
     
-    auto out = std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp );
+    return std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp, tp_match );
+  };
+
+  // the tag and probe variables
+  std::string v_out = (object != "GenPart") ? tp+"_is"+object+"_matched" : tp+"_mcTruth" ;
+  std::string matcher = (cfg.isMC) ? flavor+"_mcTruth" : flavor+"_is"+object+"_matched";
+
+  std::vector<std::string> tnp_out = {
+    tp+"_pt",
+    tp+"_eta",
+    tp+"_phi",
+    tp+"_mass",
+    tp+"_pdgId",
+    tp+"_wp",
+    v_out
   };
   
-  return df.Define(
-		   "tagger" ,
-		   kin_maker_ele ,
-		   {
-		     "Tag_Idx",
-		     "Electron_pt",
-		     "Electron_eta",
-		     "Electron_phi",
-		     "Electron_mass",
-		     "Electron_charge",
-		     "Electron_cutBasedId" }
-		   );
+  cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
   
-    
-    .Define( "theprobe" , tnp_kin_ele , { "Probe_Idx" ,
-					  "Electron_pt",
-					  "Electron_eta",
-					  "Electron_phi",
-					  "Electron_mass",
-					  "Electron_charge",
-					  "Electron_cutBasedId" }
-      )
-    .Define( "Tag_pt" , "std::get<0>(thetag)" )
-    .Define( "Tag_eta" , "std::get<1>(thetag)" )
-    .Define( "Tag_phi" , "std::get<2>(thetag)" )
-    .Define( "Tag_mass" , "std::get<3>(thetag)" )
-    .Define( "Tag_pdgId" , "std::get<4>(thetag)" )
-    .Define( "Tag_wp" , "std::get<5>(thetag)" )
-    .Define( "Probe_pt" , "std::get<0>(theprobe)" )
-    .Define( "Probe_eta" , "std::get<1>(theprobe)" )
-    .Define( "Probe_phi" , "std::get<2>(theprobe)" )
-    .Define( "Probe_mass" , "std::get<3>(theprobe)" )
-    .Define( "Probe_pdgId" , "std::get<4>(theprobe)" )
-    .Define( "Probe_wp" , "std::get<5>(theprobe)" );
-    
+  return df.Define(
+		   tp+"_kin" ,
+		   maketnpkin ,
+		   {
+		     flavor+"_4v",
+		     "Tag_Idx",
+		     flavor+"_charge",
+		     flavor+"_cutBasedId",
+		     matcher
+		   }
+		   )
+    .Define( tp+"_pt"    , "std::get<0>("+tp+"_kin)" )
+    .Define( tp+"_eta"   , "std::get<1>("+tp+"_kin)" )
+    .Define( tp+"_phi"   , "std::get<2>("+tp+"_kin)" )
+    .Define( tp+"_mass"  , "std::get<3>("+tp+"_kin)" )
+    .Define( tp+"_pdgId" , "std::get<4>("+tp+"_kin)" )
+    .Define( tp+"_wp"    , "std::get<5>("+tp+"_kin)" )
+    .Define( v_out       , "std::get<6>("+tp+"_kin)" )
+    ;
 }
-
-
-*/
 
 #endif

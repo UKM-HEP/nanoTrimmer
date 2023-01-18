@@ -1,1 +1,11 @@
-HLT_IsoMu30_eta2p1
+HLT_Ele27_WP80
+#HLT_IsoMu24_eta2p1
+#HLT_IsoMu30_eta2p1
+#HLT_IsoMu34_eta2p1
+#HLT_IsoMu40_eta2p1
+#HLT_Dimuon0_Jpsi
+#HLT_Dimuon0_Jpsi_Muon
+#HLT_Dimuon6_LowMass
+#HLT_DoubleMu3
+#HLT_Mu5_Track2_Jpsi
+#HLT_Mu7_Track7_Jpsi
