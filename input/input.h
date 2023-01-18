@@ -58,7 +58,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   df = tnpvector( df , cfg );
 
   df = tnpkin( df , cfg , "Tag" );
-  //df = tnpkin( df , cfg , "Probe" );
+  df = tnpkin( df , cfg , "Probe" );
   
   return df;
 }

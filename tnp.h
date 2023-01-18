@@ -278,10 +278,11 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
 
   std::string flavor = cfg.Flavor;
   std::string object = cfg.HLTobject;
-
+  int Id = ( flavor != "Electron" ) ? 13 : 11;
+  
   using namespace ROOT::VecOps;
   
-  auto maketnpkin = [&flavor](
+  auto maketnpkin = [&flavor,Id](
 			const std::vector<ROOT::Math::PtEtaPhiMVector> lepton_4v,
 			const RVec<int>& tp_idx,
 			const RVec<int>& lepton_charge,
@@ -291,15 +292,15 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
     RVec<float> tp_pt, tp_eta, tp_phi, tp_mass;
     RVec<int> tp_pdgid, tp_wp, tp_match;
     
-    int theId = ( flavor == "Electron" ) ? 11 : 13;
-    
     for ( unsigned int i =0 ; i < tp_idx.size() ; i++ ){
+      int theId = Id;   
+      if ( lepton_charge[i] < 0 ) theId = theId*(-1);
       
       tp_pt.emplace_back( lepton_4v[i].Pt() );
       tp_eta.emplace_back( lepton_4v[i].Eta() );
       tp_phi.emplace_back( lepton_4v[i].Phi() );
       tp_mass.emplace_back( lepton_4v[i].M() );
-      tp_pdgid.emplace_back( theId*(lepton_charge[i]) );
+      tp_pdgid.emplace_back( theId );
       tp_wp.emplace_back( lepton_wp[i] );
       tp_match.emplace_back( lepton_ismatch[i] );
     }
@@ -322,9 +323,12 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
   };
   
   cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
+
+  // Index issue
   
+  std::string thekin = tp+"_kin";
   return df.Define(
-		   tp+"_kin" ,
+		   thekin ,
 		   maketnpkin ,
 		   {
 		     flavor+"_4v",
@@ -334,13 +338,13 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
 		     matcher
 		   }
 		   )
-    .Define( tp+"_pt"    , "std::get<0>("+tp+"_kin)" )
-    .Define( tp+"_eta"   , "std::get<1>("+tp+"_kin)" )
-    .Define( tp+"_phi"   , "std::get<2>("+tp+"_kin)" )
-    .Define( tp+"_mass"  , "std::get<3>("+tp+"_kin)" )
-    .Define( tp+"_pdgId" , "std::get<4>("+tp+"_kin)" )
-    .Define( tp+"_wp"    , "std::get<5>("+tp+"_kin)" )
-    .Define( v_out       , "std::get<6>("+tp+"_kin)" )
+    .Define( tp+"_pt"    , "std::get<0>("+thekin+")" )
+    .Define( tp+"_eta"   , "std::get<1>("+thekin+")" )
+    .Define( tp+"_phi"   , "std::get<2>("+thekin+")" )
+    .Define( tp+"_mass"  , "std::get<3>("+thekin+")" )
+    .Define( tp+"_pdgId" , "std::get<4>("+thekin+")" )
+    .Define( tp+"_wp"    , "std::get<5>("+thekin+")" )
+    .Define( v_out       , "std::get<6>("+thekin+")" )
     ;
 }
 
