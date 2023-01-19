@@ -46,19 +46,38 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // *********************************************************************
   // *********************************************************************
 
+  // Global variable processing
   if (cfg.isMC) cfg.HLTobject = "GenPart";
+  df = df.Define( "weight" , (cfg.isMC) ? "Xsec*evtWeight*1" : "1" );
+  df = df.Define("Muon_cutBasedId", "(Muon_looseId*1)+(Muon_softId*2)+(Muon_tightId*4)" );
   
-  df = df.Filter( cfg.HLT+"==1" , "Passing "+ cfg.HLT +" trigger selection" );  
-  df = makeLorentzVector( df , cfg.Flavor );
-  df = makeLorentzVector( df , cfg.HLTobject );
-
   // object matching for data and mc
-  df = matching( df , cfg );
-  
-  df = tnpvector( df , cfg );
+  // Offline post-processing
+  df = makeLorentzVector( df , cfg.Flavor );      // produce 4 vector for the flavor for ease of computation
+  df = makeLorentzVector( df , cfg.HLTobject );   // produce 4 vector for the HLT object for ease of computation
+  df = matching( df , cfg );                      // object matching for DATA and MC
+  df = tnpvector( df , cfg );                     // selecting candidate for TAG and PROBE
+  df = tnpkin( df , cfg , "Tag" );                // saving the TAG kinematics: pt, eta, phi, mass, pdgId, matching information
+  df = tnpkin( df , cfg , "Probe" );              // saving the PROBE kinematics: pt, eta, phi, mass, pdgId, matching information
+  df = df.Define( "mcTrue" , (cfg.isMC) ? "Tag_isGenMatched*Probe_isGenMatched>0" : "1" ); //
 
-  df = tnpkin( df , cfg , "Tag" );
-  df = tnpkin( df , cfg , "Probe" );
+  df = df
+    .Filter( cfg.HLT+"==1" , "Passing "+ cfg.HLT +" trigger selection" );
+    //.Filter( "!(abs(Tag_eta)>= 1.4442 && abs(Tag_eta)<=1.566)" , " --> Selecting event containing Tag candidates well covered inside the detector" );
+  
+  /*
+  // TAG and PROBE selection
+  //std::string Id = (cfg.Flavor == "Electron" ) ? "11" : "13"; // electron and muon are the stable lepton seen by CMS detector.
+  df = df
+    .Filter( cfg.HLT+"==1" , "Passing "+ cfg.HLT +" trigger selection" )
+    //.Filter( "abs(Tag_pdgId)!="+Id+" && abs(Probe_pdgId)!="+Id , " --> Selecting event containing Tag and Probe pair made up of 2 "+cfg.Flavor     )
+    //.Filter( "Tag_pt>"+cfg.kMinTagPt                           , " --> Selecting event cintaining Tag candidates with Pt > "+cfg.kMinTagPt         )
+    //.Filter( "abs(Tag_eta)<"+cfg.kMaxTagEta                    , " --> Selecting event containing Tag candidates with Eta < "+cfg.kMaxTagEta       )
+    .Filter( "!(abs(Tag_eta)>= 1.4442 && abs(Tag_eta)<=1.566)" , " --> Selecting event containing Tag candidates well covered inside the detector" )
+    //.Filter( "Probe_pt>"+cfg.kMinProbePt                       , " --> Selecting event containing Probe candidates with Pt > "+cfg.kMinProbePt     )
+    //.Filter( "abs(Probe_eta)<"+cfg.kMaxProbeEta                , " --> Selecting event containing Probe candidates with Eta > "cfg.kMaxProbeEta    )
+    ;
+  */
   
   return df;
 }

@@ -69,7 +69,7 @@ auto makeLorentzVector( T &df , const std::string &col ) {
 
     using namespace ROOT::VecOps;
     
-    auto makevector = [&col](
+    auto makevector = [](
 			     const RVec<float>& obj_pt,
 			     const RVec<float>& obj_eta,
 			     const RVec<float>& obj_phi,
@@ -98,13 +98,12 @@ auto matching( T &df , Helper::config_t &cfg ) {
 
   std::string flavor = cfg.Flavor;
   std::string object = cfg.HLTobject;
-  
-  using namespace ROOT::VecOps;
+  int Id = ( flavor == "Electron" ) ? 11 : 13;
 
-  // no other flavor then electron and muon are usually used in HEP analysis
-  int theId = ( flavor == "Electron" ) ? 11 : 13;
+    
+  using namespace ROOT::VecOps;
   
-  auto ismatched = [&cfg,&theId](
+  auto ismatched = [&cfg,Id](
 				 const RVec<float>& lepton_eta,
 				 const RVec<float>& lepton_phi,
 				 //const RVec<int>& obj_id,
@@ -116,6 +115,7 @@ auto matching( T &df , Helper::config_t &cfg ) {
     auto comb = Combinations( lepton_eta , obj_eta );
     const auto numComb = comb[0].size();
     RVec<int> ismatch(lepton_eta.size(),0);
+    int theId = Id;
     
     for (size_t i = 0 ; i < numComb ; i++) {
       const auto ilep = comb[0][i];
@@ -133,7 +133,8 @@ auto matching( T &df , Helper::config_t &cfg ) {
     return ismatch;
   };
 
-  std::string v_out = (object != "GenPart") ? flavor+"_is"+object+"_matched" : flavor+"_mcTruth" ;
+  std::string v_out = (object != "GenPart") ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
+  
   cfg.outputVar.emplace_back( v_out );
   
   return df
@@ -160,7 +161,7 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
   using namespace ROOT::VecOps;
 
   // lambda function
-  auto maketnpvector  = [&cfg,&flavor](
+  auto maketnpvector  = [&cfg](
 				       const std::vector<ROOT::Math::PtEtaPhiMVector> lepton_4v,
 				       const RVec<int>& lepton_charge,
 				       const RVec<int>& lepton_wp,
@@ -181,7 +182,7 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
       if ( !( tag.Pt() > cfg.kMinTagPt && abs(tag.Eta()) < cfg.kMaxTagEta ) ) continue;
 
       // match?
-      if (!ismatch[i]) continue;
+      if ( !cfg.isMC && !ismatch[i] ) continue;
 
       // pass the tight wp?
       if ( lepton_wp[i] != cfg.kWPTag ) continue;
@@ -244,6 +245,9 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
     return out;
   };
 
+  // note, the MC genmatch is redundant (NOT USING IN CASE SAMPLE IS MC))
+  std::string matcher = (!cfg.isMC) ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
+
   // tnp specifics variables
   std::vector<std::string> tnp_out = {
     "nTnP_pair",
@@ -253,8 +257,6 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
   };
   
   cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
-
-  std::string matcher = (cfg.isMC) ? flavor+"_mcTruth" : flavor+"_is"+object+"_matched";
   
   return df.Define(
 		   "maketnpvector" ,
@@ -283,13 +285,15 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
   
   using namespace ROOT::VecOps;
   
-  auto maketnpkin = [&flavor,Id](
+  auto maketnpkin = [Id](
 			const std::vector<ROOT::Math::PtEtaPhiMVector> lepton_4v,
 			const RVec<int>& tp_idx,
 			const RVec<int>& lepton_charge,
 			const RVec<int>& lepton_wp,
 			const RVec<int>& lepton_ismatch
 			){
+    // need to press into iron... but we need to order the vector in descending order...
+    
     RVec<float> tp_pt, tp_eta, tp_phi, tp_mass;
     RVec<int> tp_pdgid, tp_wp, tp_match;
     
@@ -312,8 +316,8 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
   };
 
   // the tag and probe variables
-  std::string v_out = (object != "GenPart") ? tp+"_is"+object+"_matched" : tp+"_mcTruth" ;
-  std::string matcher = (cfg.isMC) ? flavor+"_mcTruth" : flavor+"_is"+object+"_matched";
+  std::string matcher = (!cfg.isMC) ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
+  std::string matcher_out = (!cfg.isMC) ? tp+"_isTrgObjMatched" : tp+"_isGenMatched" ;
 
   std::vector<std::string> tnp_out = {
     tp+"_pt",
@@ -322,7 +326,7 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
     tp+"_mass",
     tp+"_pdgId",
     tp+"_wp",
-    v_out
+    matcher_out
   };
   
   cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
@@ -345,7 +349,7 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
     .Define( tp+"_mass"  , "std::get<3>("+thekin+")" )
     .Define( tp+"_pdgId" , "std::get<4>("+thekin+")" )
     .Define( tp+"_wp"    , "std::get<5>("+thekin+")" )
-    .Define( v_out       , "std::get<6>("+thekin+")" )
+    .Define( matcher_out , "std::get<6>("+thekin+")" )
     ;
 }
 
