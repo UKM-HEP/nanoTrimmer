@@ -56,10 +56,9 @@ int main(int argc, char **argv) {
   //df = df.Define( "Muon_pt1" , "Muon_pt[0]" ).Define( "Muon_pt2" , "Muon_pt[1]" );
   df = df.Define("Muon_cutBasedId", "(Muon_looseId*1)+(Muon_softId*2)+(Muon_tightId*4)" );
 
-  //df = df.Filter( "Jet_pt1>20" , "events with jet1 pt > 20 GeV" );
-  //df = df.Filter( "Jet_pt2>20" , "events with jet2 pt > 20 GeV" );
+  df = df.Filter( "Jet_pt1>20" , "events with jet1 pt > 20 GeV" );
   df = df.Filter( "Electron_pt1>10" , "events with electron1 pt > 10 GeV" );
-  df = df.Filter( "Electron_pt2>10" , "events with electron2 pt > 10 GeV" );
+  df = df.Filter( "Electron_pt2>15" , "events with electron2 pt > 10 GeV" );
   //df = df.Filter( "Muon_pt1>10" , "events with muon1 pt > 20 GeV" );
   //df = df.Filter( "Muon_pt2>10" , "events with muon2 pt > 20 GeV" );
   

@@ -198,16 +198,17 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
 	
 	float mass = (tag + probe).M();
 
-	std::cout<<"The invariant mass before passing is "<<mass<<std::endl;
+	//std::cout<<"The invariant mass before passing is "<<mass<<std::endl;
 	
 	if ( ( mass > cfg.kMaxMass ) || ( mass < cfg.kMinMass ) ) continue;
 
-	std::cout<<"The invariant mass passing is "<<mass<<std::endl;
+	//std::cout<<"The invariant mass passing is "<<mass<<std::endl;
 	
 	if ( (lepton_charge[i]*lepton_charge[j]) >0 ) continue;
 
-	if ( std::any_of( masspair_vector.begin(), masspair_vector.end(), Helper::compare(mass) ) ) continue;
-	
+	if (masspair_vector.size()>1)
+	  if ( std::any_of( masspair_vector.begin(), masspair_vector.end(), Helper::compare(mass) ) ) continue;
+
 	masspair_vector.push_back( std::make_pair( mass , std::make_pair( i , j ) ) );
 	
       } // end probe loop
@@ -228,13 +229,13 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
       //if (k>2) continue;
 
       // mass pair
-      masspair.push_back( themasspair );
+      masspair.emplace_back( themasspair );
       
       // tag Idx
-      tag_idx.push_back( thetag_idx );
+      tag_idx.emplace_back( thetag_idx );
 
       // probe Idx
-      probe_idx.push_back( theprobe_idx );      
+      probe_idx.emplace_back( theprobe_idx );      
     } // end pair loop
     
     // output
@@ -293,16 +294,18 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
     RVec<int> tp_pdgid, tp_wp, tp_match;
     
     for ( unsigned int i =0 ; i < tp_idx.size() ; i++ ){
-      int theId = Id;   
-      if ( lepton_charge[i] < 0 ) theId = theId*(-1);
       
-      tp_pt.emplace_back( lepton_4v[i].Pt() );
-      tp_eta.emplace_back( lepton_4v[i].Eta() );
-      tp_phi.emplace_back( lepton_4v[i].Phi() );
-      tp_mass.emplace_back( lepton_4v[i].M() );
+      int theIdx = tp_idx[i];
+      int theId = Id;
+      if ( lepton_charge[theIdx] < 0 ) theId = theId*(-1);
+      
+      tp_pt.emplace_back( lepton_4v[theIdx].Pt() );
+      tp_eta.emplace_back( lepton_4v[theIdx].Eta() );
+      tp_phi.emplace_back( lepton_4v[theIdx].Phi() );
+      tp_mass.emplace_back( lepton_4v[theIdx].M() );
       tp_pdgid.emplace_back( theId );
-      tp_wp.emplace_back( lepton_wp[i] );
-      tp_match.emplace_back( lepton_ismatch[i] );
+      tp_wp.emplace_back( lepton_wp[theIdx] );
+      tp_match.emplace_back( lepton_ismatch[theIdx] );
     }
     
     return std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp, tp_match );
@@ -323,8 +326,6 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
   };
   
   cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
-
-  // Index issue
   
   std::string thekin = tp+"_kin";
   return df.Define(
@@ -332,7 +333,7 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
 		   maketnpkin ,
 		   {
 		     flavor+"_4v",
-		     "Tag_Idx",
+		     tp+"_Idx",
 		     flavor+"_charge",
 		     flavor+"_cutBasedId",
 		     matcher
