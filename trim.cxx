@@ -46,21 +46,20 @@ int main(int argc, char **argv) {
   ///////////////////////////////////////////////////////////////////////////////////////////
   // Skimming
   // event-level filter
-  df = df.Filter( "nJet>=1"       , "keeping events with at least 1 jet"      );
-  df = df.Filter( "nElectron>1"   , "keeping events with at least 2 electrons" );
-  //df = df.Filter( "nMuon>1"       , "keeping events with at least 2 muons"     );
+  df = df.Filter( "nJet>0"       , "POST-PROCESS : keeping events with at least 1 jet"      );
+  df = df.Filter( "nElectron>1"   , "POST-PROCESS : keeping events with at least 2 electrons" );
+  //df = df.Filter( "nMuon>1"       , "POST-PRO: keeping events with at least 2 muons"     );
 
   // particle-level filter
-  df = df.Define( "Jet_pt1" , "Jet_pt[0]" ).Define( "Jet_pt2" , "Jet_pt[1]" );
-  df = df.Define( "Electron_pt1" , "Electron_pt[0]" ).Define( "Electron_pt2" , "Electron_pt[1]");
-  //df = df.Define( "Muon_pt1" , "Muon_pt[0]" ).Define( "Muon_pt2" , "Muon_pt[1]" );
+  df = Helper::ironing( df , "Jet_pt" , "1" ).Filter( "Jet_pt1>20" , "POST-PROCESS : events with jet1 pt > 20 GeV" );
   
-  df = df.Filter( "Jet_pt1>20" , "events with jet1 pt > 20 GeV" );
-  df = df.Filter( "Electron_pt1>10" , "events with electron1 pt > 10 GeV" );
-  df = df.Filter( "Electron_pt2>15" , "events with electron2 pt > 10 GeV" );
-  //df = df.Filter( "Muon_pt1>10" , "events with muon1 pt > 20 GeV" );
-  //df = df.Filter( "Muon_pt2>10" , "events with muon2 pt > 20 GeV" );
+  df = Helper::ironing( df , "Electron_pt" , "1" ).Filter( "Electron_pt1>10" , "POST-PROCESS : events with 1st electron pt > 10 GeV" );
+  df = Helper::ironing( df , "Electron_pt" , "2" ).Filter( "Electron_pt2>15" , "POST-PROCESS : events with 2nd electron pt > 15 GeV" );
   
+  //df = Helper::ironing( df , "Muon_pt" , "1" ).Filter( "Muon_pt1>10" , "POST-PRO: events with 1st muon pt > 20 GeV" );
+  //df = Helper::ironing( df , "Muon_pt" , "2" ).Filter( "Muon_pt2>10" , "POST-PRO: events with 2nd muon pt > 20 GeV" );
+
+  // refer to input/input.h
   df = runningInput( df , mycfg );
   
   ///////////////////////////////////////////////////////////////////////////////////////////

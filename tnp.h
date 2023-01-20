@@ -343,13 +343,13 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
 		     matcher
 		   }
 		   )
-    .Define( tp+"_pt"    , "std::get<0>("+thekin+")" )
-    .Define( tp+"_eta"   , "std::get<1>("+thekin+")" )
-    .Define( tp+"_phi"   , "std::get<2>("+thekin+")" )
-    .Define( tp+"_mass"  , "std::get<3>("+thekin+")" )
-    .Define( tp+"_pdgId" , "std::get<4>("+thekin+")" )
-    .Define( tp+"_wp"    , "std::get<5>("+thekin+")" )
-    .Define( matcher_out , "std::get<6>("+thekin+")" )
+    .Define( tp+"_pt"    , "std::get<0>("+thekin+")[0]" ) // problem!!
+    .Define( tp+"_eta"   , "std::get<1>("+thekin+")[0]" )
+    .Define( tp+"_phi"   , "std::get<2>("+thekin+")[0]" )
+    .Define( tp+"_mass"  , "std::get<3>("+thekin+")[0]" )
+    .Define( tp+"_pdgId" , "std::get<4>("+thekin+")[0]" )
+    .Define( tp+"_wp"    , "std::get<5>("+thekin+")[0]" )
+    .Define( matcher_out , "std::get<6>("+thekin+")[0]" )
     ;
 }
 

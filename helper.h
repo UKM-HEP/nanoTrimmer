@@ -121,6 +121,14 @@ namespace Helper {
     }
 
   /*
+   * Iron out an array with specific index
+   */
+  template <typename T>
+  auto ironing( T &df, const std::string &collection, const std::string &which){
+    return df.Define( collection+which , collection+"["+which+"]" );
+  }
+
+  /*
    * vector maker
    */
   template <typename T>
