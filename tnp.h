@@ -343,13 +343,13 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
 		     matcher
 		   }
 		   )
-    .Define( tp+"_pt"    , "std::get<0>("+thekin+")[0]" ) // problem!!
-    .Define( tp+"_eta"   , "std::get<1>("+thekin+")[0]" )
-    .Define( tp+"_phi"   , "std::get<2>("+thekin+")[0]" )
-    .Define( tp+"_mass"  , "std::get<3>("+thekin+")[0]" )
-    .Define( tp+"_pdgId" , "std::get<4>("+thekin+")[0]" )
-    .Define( tp+"_wp"    , "std::get<5>("+thekin+")[0]" )
-    .Define( matcher_out , "std::get<6>("+thekin+")[0]" )
+    .Define( tp+"_pt_v"       , "std::get<0>("+thekin+")" ).Define( tp+"_pt"    , tp+"_pt_v[0]"       )
+    .Define( tp+"_eta_v"      , "std::get<1>("+thekin+")" ).Define( tp+"_eta"   , tp+"_eta_v[0]"      )
+    .Define( tp+"_phi_v"      , "std::get<2>("+thekin+")" ).Define( tp+"_phi"   , tp+"_phi_v[0]"      )
+    .Define( tp+"_mass_v"     , "std::get<3>("+thekin+")" ).Define( tp+"_mass"  , tp+"_mass_v[0]"     )
+    .Define( tp+"_pdgId_v"    , "std::get<4>("+thekin+")" ).Define( tp+"_pdgId" , tp+"_pdgId_v[0]"    )
+    .Define( tp+"_wp_v"       , "std::get<5>("+thekin+")" ).Define( tp+"_wp"    , tp+"_wp_v[0]"       )
+    .Define( matcher_out+"_v" , "std::get<6>("+thekin+")" ).Define( matcher_out , matcher_out+"_v[0]" )
     ;
 }
 
