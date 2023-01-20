@@ -113,40 +113,48 @@ auto matching( T &df , Helper::config_t &cfg ) {
     // Get indices of all possible combinations
     auto comb = Combinations( lepton_eta , obj_eta );
     const auto numComb = comb[0].size();
-    RVec<int> ismatch(lepton_eta.size(),0);
+    RVec<int> ishltmatch(lepton_eta.size(), (cfg.isMC) ? 1 : 0 );
+    RVec<int> isgenmatch(lepton_eta.size(), (cfg.isMC) ? 0 : 1 );
+
     int theId = Id;
     
     for (size_t i = 0 ; i < numComb ; i++) {
       const auto ilep = comb[0][i];
       const auto iobj = comb[1][i];
 
-      // HLT object ID is koko, ignored for now; only consider MC
-      if ( (cfg.HLTobject == "GenPart") &&  abs(obj_id[iobj]) != theId ) continue;
+      if (cfg.isMC) if ( abs(obj_id[iobj]) != theId ) continue;
       
       const auto deltarS = pow(lepton_eta[ilep] - obj_eta[iobj] , 2) + pow(Helper::DeltaPhi(lepton_phi[ilep], obj_phi[iobj] ), 2);
-      
-      if ( deltarS < cfg.minDeltaR ){
-	ismatch[ilep] = 1;
+
+      if (cfg.isMC){
+	isgenmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ;
+	continue;
+      }
+      else {
+	ishltmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ;
 	continue;
       }
     }
     
-    return ismatch;
+    return std::make_tuple( isgenmatch , ishltmatch );
   };
-
-  std::string v_out = (object != "GenPart") ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
   
-  cfg.outputVar.emplace_back( v_out );
+  //std::string v_out = (object != "GenPart") ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
+  
+  //cfg.outputVar.emplace_back( v_out );
   
   return df
-    .Define( v_out , ismatched , {
+    .Define( "matcher" , ismatched , {
 	flavor+"_eta" ,
 	flavor+"_phi" ,
-	(cfg.HLTobject == "GenPart") ? "GenPart_pdgId" : flavor+"_charge" , // act as dummy for data
+	(cfg.isMC) ? "GenPart_pdgId" : flavor+"_charge" , // act as dummy for data
 	object+"_eta",
 	object+"_phi",
       }
-      );   
+      )
+    .Define( flavor+"_isTrgObjMatched" , "std::get<0>(matcher)" )
+    .Define( flavor+"_isGenMatched" , "std::get<1>(matcher)" )
+    ;
 }
 
 // TnP WORKFLOW
@@ -289,7 +297,7 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
   
   using namespace ROOT::VecOps;
   
-  auto maketnpkin = [Id](
+  auto maketnpkin = [&cfg,Id](
 			const std::vector<ROOT::Math::PtEtaPhiMVector> lepton_4v,
 			const RVec<int>& tp_idx,
 			const RVec<int>& lepton_charge,
@@ -299,7 +307,9 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
     // need to press into iron... but we need to order the vector in descending order...
     
     RVec<float> tp_pt, tp_eta, tp_phi, tp_mass;
-    RVec<int> tp_pdgid, tp_wp, tp_match;
+    RVec<int> tp_pdgid, tp_wp;
+    RVec<int> tp_hltmatch(tp_idx.size(), (cfg.isMC) ? 0 : 1 );
+    RVec<int> tp_genmatch(tp_idx.size(), (cfg.isMC) ? 1 : 0 );
     
     for ( unsigned int i =0 ; i < tp_idx.size() ; i++ ){
       
@@ -313,16 +323,21 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
       tp_mass.emplace_back( lepton_4v[theIdx].M() );
       tp_pdgid.emplace_back( theId );
       tp_wp.emplace_back( lepton_wp[theIdx] );
-      tp_match.emplace_back( lepton_ismatch[theIdx] );
+      if (cfg.isMC){
+	tp_genmatch.emplace_back( lepton_ismatch[theIdx] );
+      }
+      else{
+	tp_hltmatch.emplace_back( lepton_ismatch[theIdx] );
+      }
     }
     
-    return std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp, tp_match );
+    return std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp, tp_hltmatch , tp_genmatch );
   };
 
   // the tag and probe variables
-  std::string matcher = (!cfg.isMC) ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
-  std::string matcher_out = (!cfg.isMC) ? tp+"_isTrgObjMatched" : tp+"_isGenMatched" ;
+  //std::string matcher = (!cfg.isMC) ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
 
+  /*
   std::vector<std::string> tnp_out = {
     tp+"_pt",
     tp+"_eta",
@@ -332,9 +347,10 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
     tp+"_wp",
     matcher_out
   };
+  */
   
-  cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
-  
+  //cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
+
   std::string thekin = tp+"_kin";
   return df.Define(
 		   thekin ,
@@ -344,16 +360,17 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
 		     tp+"_Idx",
 		     flavor+"_charge",
 		     flavor+"_cutBasedId",
-		     matcher
+		     (cfg.isMC) ? flavor+"_isGenMatched" : flavor+"_isTrgObjMatched"
 		   }
 		   )
-    .Define( tp+"_pt_v"       , "std::get<0>("+thekin+")" ).Define( tp+"_pt"    , tp+"_pt_v[0]"       )
-    .Define( tp+"_eta_v"      , "std::get<1>("+thekin+")" ).Define( tp+"_eta"   , tp+"_eta_v[0]"      )
-    .Define( tp+"_phi_v"      , "std::get<2>("+thekin+")" ).Define( tp+"_phi"   , tp+"_phi_v[0]"      )
-    .Define( tp+"_mass_v"     , "std::get<3>("+thekin+")" ).Define( tp+"_mass"  , tp+"_mass_v[0]"     )
-    .Define( tp+"_pdgId_v"    , "std::get<4>("+thekin+")" ).Define( tp+"_pdgId" , tp+"_pdgId_v[0]"    )
-    .Define( tp+"_wp_v"       , "std::get<5>("+thekin+")" ).Define( tp+"_wp"    , tp+"_wp_v[0]"       )
-    .Define( matcher_out+"_v" , "std::get<6>("+thekin+")" ).Define( matcher_out , matcher_out+"_v[0]" )
+    .Define( tp+"_pt_v"              , "std::get<0>("+thekin+")" ).Define( tp+"_pt"              , tp+"_pt_v[0]"              )
+    .Define( tp+"_eta_v"             , "std::get<1>("+thekin+")" ).Define( tp+"_eta"             , tp+"_eta_v[0]"             )
+    .Define( tp+"_phi_v"             , "std::get<2>("+thekin+")" ).Define( tp+"_phi"             , tp+"_phi_v[0]"             )
+    .Define( tp+"_mass_v"            , "std::get<3>("+thekin+")" ).Define( tp+"_mass"            , tp+"_mass_v[0]"            )
+    .Define( tp+"_pdgId_v"           , "std::get<4>("+thekin+")" ).Define( tp+"_pdgId"           , tp+"_pdgId_v[0]"           )
+    .Define( tp+"_wp_v"              , "std::get<5>("+thekin+")" ).Define( tp+"_wp"              , tp+"_wp_v[0]"              )
+    .Define( tp+"_isTrgObjMatched_v" , "std::get<6>("+thekin+")" ).Define( tp+"_isTrgObjMatched" , tp+"_isTrgObjMatched_v[0]" )
+    .Define( tp+"_isGenMatched_v"    , "std::get<7>("+thekin+")" ).Define( tp+"_isGenMatched"    , tp+"_isGenMatched_v[0]"    )
     ;
 }
 
