@@ -120,7 +120,7 @@ auto matching( T &df , Helper::config_t &cfg ) {
       const auto ilep = comb[0][i];
       const auto iobj = comb[1][i];
 
-      // HLT object ID is koko, ignored for now.
+      // HLT object ID is koko, ignored for now; only consider MC
       if ( (cfg.HLTobject == "GenPart") &&  abs(obj_id[iobj]) != theId ) continue;
       
       const auto deltarS = pow(lepton_eta[ilep] - obj_eta[iobj] , 2) + pow(Helper::DeltaPhi(lepton_phi[ilep], obj_phi[iobj] ), 2);
