@@ -20,7 +20,8 @@ auto runningInput( T &df , Helper::config_t &cfg ){
 
   // What is the HLT object you are working with ?
   cfg.HLTobject = "TrigObj_ele";
-
+  if (cfg.isMC) cfg.HLTobject = "GenPart";
+  
   // What is the MINIMUM transverse momentum for your Tag ?
   cfg.kMinTagPt = 30; // GeV
 
@@ -49,7 +50,6 @@ auto runningInput( T &df , Helper::config_t &cfg ){
 
   // OFFLINE POST-PROCESSING
   // --> DONT TOUCH <--- ////////////////////////////////////////////////////////////////////
-  if (cfg.isMC) cfg.HLTobject = "GenPart";
   df = df.Define( "weight" , (cfg.isMC) ? "Xsec*evtWeight*1" : "1" );                      // produce weight variable
   df = df.Define("Muon_cutBasedId", "(Muon_looseId*1)+(Muon_softId*2)+(Muon_tightId*4)" ); // produce convenient cutbasedID for muon object
   df = makeLorentzVector( df , cfg.Flavor );                                               // produce 4-vector for the flavor for ease of computation
@@ -68,7 +68,8 @@ auto runningInput( T &df , Helper::config_t &cfg ){
     .Filter( cfg.HLT+"==1" , "PRE-SELECTION: Passing "+ cfg.HLT +" trigger selection" )
     .Filter( "!(abs(Tag_eta)>= 1.4442 && abs(Tag_eta)<=1.566)" , "PRE-SELECTION: Selecting event containing Tag candidates well covered inside the detector" )
     .Filter( "abs(Tag_pdgId) == "+Id+" && Tag_pdgId+Probe_pdgId == 0" , "PRE-SELECTION: Selecting event containing Tag and Probe pair made up of 2 "+cfg.Flavor     )
-    .Filter( "Tag_wp == 4 ", "PRE-SELECTION: Selecting event containing Tag with working point tight" );
+    .Filter( "Tag_wp == 4 ", "PRE-SELECTION: Selecting event containing Tag with working point tight" )
+    ;
   
   return df;
 }

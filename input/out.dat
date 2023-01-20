@@ -39,3 +39,25 @@ Muon_looseId
 Muon_cutBasedId
 Muon_jetIdx
 Muon_genPartIdx
+# tnp related output variables
+Tag_pt
+Tag_eta
+Tag_phi
+Tag_mass
+Tag_wp
+Tag_pdgId
+Tag_isTrgObjMatched
+Tag_isGenMatched
+Tag_Idx
+Probe_pt
+Probe_eta
+Probe_phi
+Probe_mass
+Probe_wp
+Probe_pdgId
+Probe_isTrgObjMatched
+Probe_isGenMatched
+Probe_Idx
+mcTrue
+nTnP_pair
+TnP_mass

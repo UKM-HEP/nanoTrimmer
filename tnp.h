@@ -99,17 +99,16 @@ auto matching( T &df , Helper::config_t &cfg ) {
   std::string flavor = cfg.Flavor;
   std::string object = cfg.HLTobject;
   int Id = ( flavor == "Electron" ) ? 11 : 13;
-
     
   using namespace ROOT::VecOps;
   
   auto ismatched = [&cfg,Id](
-				 const RVec<float>& lepton_eta,
-				 const RVec<float>& lepton_phi,
-				 //const RVec<int>& obj_id,
-				 const RVec<float>& obj_eta,
-				 const RVec<float>& obj_phi
-				 )
+			     const RVec<float>& lepton_eta,
+			     const RVec<float>& lepton_phi,
+			     const RVec<int>& obj_id,
+			     const RVec<float>& obj_eta,
+			     const RVec<float>& obj_phi
+			     )
   {
     // Get indices of all possible combinations
     auto comb = Combinations( lepton_eta , obj_eta );
@@ -120,8 +119,10 @@ auto matching( T &df , Helper::config_t &cfg ) {
     for (size_t i = 0 ; i < numComb ; i++) {
       const auto ilep = comb[0][i];
       const auto iobj = comb[1][i];
+
+      // HLT object ID is koko, ignored for now.
+      if ( (cfg.HLTobject == "GenPart") &&  abs(obj_id[iobj]) != theId ) continue;
       
-      //if ( abs(obj_id[iobj]) != theId ) continue;
       const auto deltarS = pow(lepton_eta[ilep] - obj_eta[iobj] , 2) + pow(Helper::DeltaPhi(lepton_phi[ilep], obj_phi[iobj] ), 2);
       
       if ( deltarS < cfg.minDeltaR ){
@@ -141,7 +142,7 @@ auto matching( T &df , Helper::config_t &cfg ) {
     .Define( v_out , ismatched , {
 	flavor+"_eta" ,
 	flavor+"_phi" ,
-	//object+"_Id",
+	(cfg.HLTobject == "GenPart") ? "GenPart_pdgId" : flavor+"_charge" , // act as dummy for data
 	object+"_eta",
 	object+"_phi",
       }
@@ -249,6 +250,7 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
   std::string matcher = (!cfg.isMC) ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
 
   // tnp specifics variables
+  /*
   std::vector<std::string> tnp_out = {
     "nTnP_pair",
     "TnP_mass",
@@ -257,6 +259,8 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
   };
   
   cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
+
+  */
   
   return df.Define(
 		   "maketnpvector" ,
