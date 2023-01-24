@@ -26,7 +26,6 @@
 #include "TMath.h"
 
 #include <thread>
-#include <bits/stdc++.h>
 
 typedef std::pair<float,std::pair<int,int>> valuetagpair;
 //typedef std::pair<std::pair<ROOT::Math::PtEtaPhiMVector,int>,std::pair<ROOT::Math::PtEtaPhiMVector,int>> tnp;
@@ -148,6 +147,7 @@ namespace Helper {
 
     bool isMC;
     float Luminosity;
+    float xsec;
     std::string HLT;
     std::string Flavor;
     std::string HLTobject;
