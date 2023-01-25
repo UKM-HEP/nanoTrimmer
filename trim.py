@@ -9,10 +9,9 @@ parser = OptionParser(usage)
 parser.add_option("-d","--directory", action="store", type="string", dest="directory", default="/disk05/cmsopendata/8TeV_tnp/RunI/8TeV") # point to where datasets are stored
 parser.add_option("-o","--output", action="store", type="string", dest="output", default=os.environ['PWD'])
 parser.add_option("-b","--batch", action="store_true", dest="batch", default=False)
-parser.add_option("-t","--test", action="store_true", dest="test", default=False)
+parser.add_option("-t","--test", action="store_true", dest="test", default=False) # test on small samples
 parser.add_option("-m","--mdebugging", action="store_true", dest="debugging", default=False)
-#parser.add_option("-r","--remoteout", action="store_true", dest="test", default=False)
-parser.add_option("-n","--nfile", action="store", type="int", dest="nfile", default=10) # how many file to process in batch
+parser.add_option("-n","--nfile", action="store", type="int", dest="nfile", default=10) # how many file to process
 
 (options, args) = parser.parse_args()
 
@@ -25,7 +24,6 @@ batch = options.batch
 test = options.test
 debugging = options.debugging
 nfile = options.nfile
-#remoteout = options.remoteout
 pd_samples= ""
 
 ######################################################################################
@@ -119,31 +117,38 @@ if __name__ == "__main__":
         print("Debugging End")
         sys.exit()
 
-        
-    for isample in glob.glob('%s/*' %directory):
-        
-        if "Run" or "JPsi" in isample:
-            pd_samples = isample.split('/')[-1]
-            outdirectory= '%s/%s_trim' %( output , pd_samples )
-        else:
-            pd_samples = '%s_%s' %( isample.split('/')[-1] , isample.split('/')[-2] )
-            outdirectory= '%s/%s_trim' %( output , pd_samples )
-       
-        outdirectory= '%s/%s_trim' %( output , pd_samples )
-        
-        if not os.path.exists(outdirectory):
-            os.system( "mkdir -p %s" %outdirectory )
-        #else:
-        #    os.system( "rm -rf %s"   %outdirectory )
-        #    os.system( "mkdir -p %s" %outdirectory )
 
-        os.system("make")
-        if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
+    os.system("make")
+    if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
 
-        # loop on root files
-        count=0
-        gcount=0
-        rootfiles=[]
+    pd_sample = directory.split('/')[-1]
+    outdirectory= '%s/%s_trimmed' %( output , pd_sample )
+
+    if not os.path.exists(outdirectory):
+        os.system( "mkdir -p %s" %outdirectory )
+
+    # loop on root files
+    count=0
+    gcount=0
+    rootfiles=[]
+    filelist = glob.glob('%s/*.root' %directory )
+    for ifile in filelist:
+        if batch : ifile = 'root://eosuser.cern.ch/'+ifile
+        if count != nfile and count != len(filelist):
+            jobname = '%s/%s__part-%s.txt' %( outdirectory , pd_sample , gcount )
+            f=open( jobname , 'w' )
+            count+=1
+            rootfiles.append(ifile)
+        if count == nfile or count == len(filelist):
+            #print("i am here")
+            f.write( '\n'.join(rootfiles) )
+            f.close()
+            execute( outdirectory , jobname )
+            print("")
+            count=0; rootfiles.clear()
+            gcount+=1              
+            
+    '''
         filelist = glob.glob('%s/*.root' %isample )
         for ifile in filelist:
 
@@ -168,3 +173,4 @@ if __name__ == "__main__":
                 print("")
                 count=0; rootfiles.clear()
                 gcount+=1
+        '''

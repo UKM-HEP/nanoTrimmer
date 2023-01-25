@@ -4,7 +4,7 @@ CWD=${PWD}
 
 ###################################################
 # Location containing all the sampels
-BASE="/Users/shoh/Works/nanoTrimmer/thetest"
+BASE="/home/shoh/Works/cmsopendata/nanoTrimmer/samples_test"
 
 # centre of mass energy
 EN="8TeV"
