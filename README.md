@@ -1,43 +1,34 @@
-# nanoTrimmer
+# V1 nanoTrimmer
 Just a skimming code, using RDataframe, on cms opendata.
 
-## Project
+For now, the code cater for Tag and Probe study.
 
-### Tag and probe
+## What does it do?
 
-- 7TeV
+The packages (collective codes) use to pre-processing the NanoAOD root files into a lightweight and convenient format for offline tag-and-probe study
+using UKM's basic computing facility.
 
+## How to run
+
+The script ```runtrim.sh``` encoded the basic syntex running on processes in the ```samples_test``` folder. The python script
+```trim.py``` will be called, with argument(s) ```-d```, point to the root files contained in name of process/datasets ```Run2012B_SingleElectron```;
+```-o```, point to the output folders containing the output root files; ```-n```, specify the number of root files input to the ```trim``` executable.
+
+Running 
 ```
-# data
-Run2011A_SingleElectron
-Run2011B_SingleElectron
-Run2011A_SingleMu
-Run2011B_SingleMu
-Run2011A_DoubleElectron
-Run2011B_DoubleElectron
-Run2011A_DoubleMu
-Run2011B_DoubleMu
-Run2011A_MuOnia
+./runTrimmer.sh
+``` 
+will demonstrate the basic working example.
 
-# mc
-JPsiToMuMu_2MuPEtaFilter
-DYJetsToLL_M-10To50_TuneZ2
-DYJetsToLL_M-50
-```
+## User input
 
-- 8TeV
+The relevant codes are:
 
-```
-#data
-Run2012B_SingleElectron                                                                                
-Run2012C_SingleElectron
-Run2012B_SingleMu
-Run2012C_SingleMu
-Run2012B_DoubleElectron                                                                                                              
-Run2012C_DoubleElectron                                                                                                               
-Run2012B_DoubleMuParked                                                                                                            
-Run2012C_DoubleMuParked
+| code/script  | What it does  |
+|---|---|
+| ```runTrim.sh``` | Specifies the source of the root files  |
+| ```trim.cxx``` | pre-selection and driver for ```input/input.h``` |
+| ```input/HLT.dat``` | High Level Trigger information to be kept  |
+| ```input/input.h``` | Choices of parameters needed for tag and probe study | 
+| ```input/out.dat``` | output variables needed for tag and probe efficiency calculation |
 
-#mc
-DYJetsToLL_M-50_TuneZ2Star
-```
