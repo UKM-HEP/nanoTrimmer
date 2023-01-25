@@ -129,24 +129,31 @@ if __name__ == "__main__":
 
     # loop on root files
     count=0
-    gcount=0
     rootfiles=[]
     filelist = glob.glob('%s/*.root' %directory )
-    for ifile in filelist:
+    l_filelist = len(filelist)
+    for gcount, ifile in enumerate(filelist, start=1):
         if batch : ifile = 'root://eosuser.cern.ch/'+ifile
-        if count != nfile and count != len(filelist):
+
+        # count is lower than nfile
+        if count == 0: #and count != len(filelist):
             jobname = '%s/%s__part-%s.txt' %( outdirectory , pd_sample , gcount )
             f=open( jobname , 'w' )
             count+=1
+
+        if count <= nfile:
             rootfiles.append(ifile)
-        if count == nfile or count == len(filelist):
-            #print("i am here")
+            count+=1
+            
+        # when to stop writing text file contents
+        if count == nfile or ( count <= nfile and gcount == l_filelist ) :
+            print("Summarizing text file")
+            print("nfile : ", nfile ," ; gcount : ", gcount, " ; l_filelist : ", l_filelist ," ; count : ", count )
             f.write( '\n'.join(rootfiles) )
             f.close()
-            execute( outdirectory , jobname )
-            print("")
+            #execute( outdirectory , jobname )
             count=0; rootfiles.clear()
-            gcount+=1              
+            print("")
             
     '''
         filelist = glob.glob('%s/*.root' %isample )
