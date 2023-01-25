@@ -10,7 +10,6 @@ parser.add_option("-d","--directory", action="store", type="string", dest="direc
 parser.add_option("-o","--output", action="store", type="string", dest="output", default=os.environ['PWD'])
 parser.add_option("-b","--batch", action="store_true", dest="batch", default=False)
 parser.add_option("-t","--test", action="store_true", dest="test", default=False) # test on small samples
-parser.add_option("-m","--mdebugging", action="store_true", dest="debugging", default=False)
 parser.add_option("-n","--nfile", action="store", type="int", dest="nfile", default=10) # how many file to process
 
 (options, args) = parser.parse_args()
@@ -22,9 +21,7 @@ directory = options.directory
 output = options.output
 batch = options.batch
 test = options.test
-debugging = options.debugging
 nfile = options.nfile
-pd_samples= ""
 
 ######################################################################################
 
@@ -104,20 +101,7 @@ def execute( outdirectory_ , jobname_  ):
 
 if __name__ == "__main__":
 
-    if debugging :
-        outdirectory= '%s/test' %( output )
-        #if not os.path.exists(outdirectory): os.system( "mkdir -p %s" %outdirectory )
-        os.system("make")
-
-        # make txt file
-        os.system("ls $PWD/test/*_test_*.root > %s/test.txt " %( outdirectory ) )
-        cmd="./trim %s/test.txt %s/test_out.root" %( outdirectory , outdirectory )
-        print(cmd)
-        os.system(cmd)
-        print("Debugging End")
-        sys.exit()
-
-
+    os.system("make clean")
     os.system("make")
     if batch: os.system('voms-proxy-init -voms cms -valid 168:00')
 
@@ -129,6 +113,7 @@ if __name__ == "__main__":
 
     # loop on root files
     count=0
+    ncount=0
     rootfiles=[]
     filelist = glob.glob('%s/*.root' %directory )
     l_filelist = len(filelist)
@@ -137,9 +122,9 @@ if __name__ == "__main__":
 
         # count is lower than nfile
         if count == 0: #and count != len(filelist):
-            jobname = '%s/%s__part-%s.txt' %( outdirectory , pd_sample , gcount )
+            ncount+=1
+            jobname = '%s/%s__part-%s.txt' %( outdirectory , pd_sample , ncount )
             f=open( jobname , 'w' )
-            count+=1
 
         if count <= nfile:
             rootfiles.append(ifile)
@@ -151,33 +136,6 @@ if __name__ == "__main__":
             print("nfile : ", nfile ," ; gcount : ", gcount, " ; l_filelist : ", l_filelist ," ; count : ", count )
             f.write( '\n'.join(rootfiles) )
             f.close()
-            #execute( outdirectory , jobname )
+            execute( outdirectory , jobname )
             count=0; rootfiles.clear()
             print("")
-            
-    '''
-        filelist = glob.glob('%s/*.root' %isample )
-        for ifile in filelist:
-
-            if batch : ifile = 'root://eosuser.cern.ch/'+ifile
-            if count != nfile and count != len(filelist):
-                
-                #print(count)
-                #print(len(filelist))
-                
-                jobname = '%s/%s__part-%s.txt' %( outdirectory , pd_samples , gcount )
-                f=open( jobname , 'w' )
-
-                count+=1
-                rootfiles.append(ifile)
-                
-            if count == nfile or count == len(filelist):
-                #print("i am here")
-                f.write( '\n'.join(rootfiles) )
-                f.close()
-                execute( outdirectory , jobname )
-
-                print("")
-                count=0; rootfiles.clear()
-                gcount+=1
-        '''

@@ -1,3 +1,0 @@
-/home/shoh/Works/cmsopendata/nanoTrimmer/test/Run2012B_SingleElectron_test_0.root
-/home/shoh/Works/cmsopendata/nanoTrimmer/test/Run2012B_SingleElectron_test_1.root
-/home/shoh/Works/cmsopendata/nanoTrimmer/test/Run2012B_SingleElectron_test_2.root
