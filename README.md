@@ -31,4 +31,3 @@ The relevant codes are:
 | ```input/HLT.dat``` | High Level Trigger information to be kept  |
 | ```input/input.h``` | Choices of parameters needed for tag and probe study | 
 | ```input/out.dat``` | output variables needed for tag and probe efficiency calculation |
-
