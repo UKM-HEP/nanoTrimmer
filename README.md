@@ -1,4 +1,4 @@
-# V1 nanoTrimmer
+# nanoTrimmer
 Just a skimming code, using RDataframe, on cms opendata.
 
 For now, the code cater for Tag and Probe study.
