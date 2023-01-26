@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv) {
   
-  if(argc != 3) {
+  if(argc != 4) {
     std::cout << "Use executable with following arguments: ./trim input output core" << std::endl;
     return -1;
   }
@@ -12,16 +12,9 @@ int main(int argc, char **argv) {
   // start time
   TStopwatch time;
   time.Start();
-
-  unsigned int processor_count;
-  if (argv[3]==NULL){  
-    //may return 0 when not able to detect
-    //const auto processor_count = std::thread::hardware_concurrency();
-    processor_count = std::thread::hardware_concurrency();
-  }else{
-    processor_count = strtoul(argv[3], NULL, 10);
-  }
   
+  int ncore = atoi(argv[3]);
+  const auto processor_count = (ncore == -1) ? std::thread::hardware_concurrency() : ncore;
   std::cout << "ncpu detected : " << processor_count << ", using it all!" << std::endl;
   ROOT::EnableImplicitMT(processor_count);
   

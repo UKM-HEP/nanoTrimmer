@@ -81,11 +81,8 @@ def tosubmit(outname_, cmd_ ):
 def execute( outdirectory_ , jobname_  ):
     outname = "%s" %( jobname_.replace(".txt",".root") )
     cmd="./trim"
-    if core>1:
-        cmd+=" %s %s %s" %( jobname_ , outname , core )
-    else:
-        cmd+=" %s %s" %( jobname_ , outname )
-
+    cmd+=" %s %s %s" %( jobname_ , outname , core )
+    
     if batch :
         cmd = cmd.replace(cmd.split(' ')[-1], cmd.split(' ')[-1].split('/')[-1] )
         tosubmit(outname, cmd )
