@@ -54,7 +54,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // OFFLINE POST-PROCESSING
   // --> DONT TOUCH <--- ////////////////////////////////////////////////////////////////////
   df = df.Define( "xsec" , std::to_string(cfg.xsec) ).Define( "lumi" , std::to_string(cfg.Luminosity) );
-  df = (cfg.isMC) ? df.Define( "weight" , "(xsec/event)*lumi*evtWeight*1" ) : df.Define( "weight" , "1" ) ;
+  df = df.Define( "weights" , (cfg.isMC) ? "(xsec/event)*lumi*evtWeight*1" : "1" );
   //df = df.Define( "weight" , (cfg.isMC) ? "(xsec/event)*"+cfg.Luminosity+"*evtWeight*1*" : "1" );  // produce weight variable
   df = df.Define("Muon_cutBasedId", "(Muon_looseId*1)+(Muon_softId*2)+(Muon_tightId*4)" );     // produce convenient cutbasedID for muon object
   df = makeLorentzVector( df , cfg.Flavor );                                                   // produce 4-vector for the flavor for ease of computation
