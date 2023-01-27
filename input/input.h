@@ -54,8 +54,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // OFFLINE POST-PROCESSING
   // --> DONT TOUCH <--- ////////////////////////////////////////////////////////////////////
   df = df.Define( "xsec" , std::to_string(cfg.xsec) ).Define( "lumi" , std::to_string(cfg.Luminosity) );
-  df = (cfg.isMC) ? df.Define( "weight" , "(xsec/event)*lumi*evtWeight*1" ) : df.Define( "weight" , "1" ) ;
-  //df = df.Define( "weight" , (cfg.isMC) ? "(xsec/event)*"+cfg.Luminosity+"*evtWeight*1*" : "1" );  // produce weight variable
+  df = (cfg.isMC) ? df.Define( "weights" , "(xsec/event)*lumi*evtWeight*1" ) : df.Define( "weights" , "1" ) ; // produce total weights
   df = df.Define("Muon_cutBasedId", "(Muon_looseId*1)+(Muon_softId*2)+(Muon_tightId*4)" );     // produce convenient cutbasedID for muon object
   df = makeLorentzVector( df , cfg.Flavor );                                                   // produce 4-vector for the flavor for ease of computation
   df = makeLorentzVector( df , cfg.HLTobject );                                                // produce 4-vector for the HLT object for ease of computation
@@ -64,7 +63,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   df = tnpkin( df , cfg , "Tag" );                                                             // saving the TAG kinematics: pt, eta, phi, mass, pdgId, matching information
   df = tnpkin( df , cfg , "Probe" );                                                           // saving the PROBE kinematics: pt, eta, phi, mass, pdgId, matching information
   df = df.Define( "mcTrue" , (cfg.isMC) ? "Tag_isGenMatched*Probe_isGenMatched>0" : "1" );     // produce mcTrue variable
-  //df = Helper::ironing( df , "Tag_pt" , "1" );
+  df = Helper::ironing( df , "TnP_mass" , 1 ).Define("pair_mass","TnP_mass1");
   //df = Helper::ironing( df , "Jet_pt" , "1" );
   // --> DONT TOUCH <--- ////////////////////////////////////////////////////////////////////
   
