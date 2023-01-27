@@ -61,6 +61,7 @@ Probe_isTrgObjMatched
 Probe_isGenMatched
 Probe_Idx
 mcTrue
+pair_mass
 nTnP_pair
 TnP_mass
 pair_mass

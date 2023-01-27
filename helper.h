@@ -124,9 +124,10 @@ namespace Helper {
    * Iron out an array with specific index
    */
   template <typename T>
-  auto ironing( T &df, const std::string &collection, const std::string &which){
-    //int which = order-1;
-    return df.Define( collection+which , collection+"["+which+"]" );
+  auto ironing( T &df, const std::string &collection, int order){
+    std::string order_ = std::to_string(order);
+    std::string which = std::to_string(order-1);
+    return df.Define( collection+order_ , collection+"["+which+"]" );
   }
   
   /*
