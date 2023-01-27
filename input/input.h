@@ -9,7 +9,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // *********************************************************************
   // *********************************************************************
   // What is the integrated luminosity you are working with ?
-  cfg.Luminosity = 2270.; // in pb^{-1}
+  cfg.Luminosity = 4430; // in pb^{-1}
 
   // What is the HLT trigger you used for your analysis ?
   cfg.HLT = "HLT_Ele27_WP80";
@@ -35,7 +35,9 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   cfg.kMaxProbeEta = 2.4;
 
   // What is the resonance cross section?
-  cfg.xsec = 2500.; // pb
+  // 7TeV: https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSections
+  // 8TeV: https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat8TeV
+  cfg.xsec =  1177.3; // pb
 
   // What is the MAXIMUM mass of your favorite resonance?
   cfg.kMaxMass = 120.; // GeV
