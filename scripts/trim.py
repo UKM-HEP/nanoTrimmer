@@ -9,7 +9,7 @@ parser = OptionParser(usage)
 parser.add_option("-d","--directory", action="store", type="string", dest="directory", default="/disk05/cmsopendata/8TeV_tnp/RunI/8TeV") # point to where datasets are stored
 parser.add_option("-o","--output", action="store", type="string", dest="output", default=os.environ['PWD'])
 parser.add_option("-b","--batch", action="store_true", dest="batch", default=False)
-parser.add_option("-m","--merge", action="store_true", dest="merge", default=False)
+parser.add_option("-m","--merge", action="store_true", dest="merge", default=True)
 parser.add_option("-t","--test", action="store_true", dest="test", default=False) # test on small samples
 parser.add_option("-n","--nfile", action="store", type="int", dest="nfile", default=10) # how many file to process
 parser.add_option("-c","--core", action="store", type="int", dest="core", default=-1 )
@@ -143,4 +143,4 @@ if __name__ == "__main__":
             count=0; rootfiles.clear()
             print("")
             
-    if (merge): os.system("python scripts/haddnano.py %s/%s.root %s/*.root" %(outdirectory, pd_sample, outdirectory) 
+    if (merge): os.system( "python scripts/haddnano.py %s/%s.root %s/*.root" %(outdirectory, pd_sample, outdirectory) )
