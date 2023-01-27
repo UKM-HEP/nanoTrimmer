@@ -12,6 +12,7 @@ parser.add_option("-b","--batch", action="store_true", dest="batch", default=Fal
 parser.add_option("-m","--merge", action="store_true", dest="merge", default=False)
 parser.add_option("-t","--test", action="store_true", dest="test", default=False) # test on small samples
 parser.add_option("-n","--nfile", action="store", type="int", dest="nfile", default=10) # how many file to process
+parser.add_option("-c","--core", action="store", type="int", dest="core", default=-1 )
 
 (options, args) = parser.parse_args()
 
@@ -24,6 +25,7 @@ batch = options.batch
 test = options.test
 nfile = options.nfile
 merge = options.merge
+core = options.core
 
 ######################################################################################
 
@@ -81,8 +83,8 @@ def tosubmit(outname_, cmd_ ):
 def execute( outdirectory_ , jobname_  ):
     outname = "%s" %( jobname_.replace(".txt",".root") )
     cmd="./trim"
-    cmd+=" %s %s" %( jobname_ , outname )
-
+    cmd+=" %s %s %s" %( jobname_ , outname , core )
+    
     if batch :
         cmd = cmd.replace(cmd.split(' ')[-1], cmd.split(' ')[-1].split('/')[-1] )
         tosubmit(outname, cmd )
@@ -134,12 +136,11 @@ if __name__ == "__main__":
             
         # when to stop writing text file contents
         if count == nfile or ( count <= nfile and gcount == l_filelist ) :
-            print("Summarizing text file")
-            print("nfile : ", nfile ," ; gcount : ", gcount, " ; l_filelist : ", l_filelist ," ; count : ", count )
+            #print("nfile : ", nfile ," ; gcount : ", gcount, " ; l_filelist : ", l_filelist ," ; count : ", count )
             f.write( '\n'.join(rootfiles) )
             f.close()
             execute( outdirectory , jobname )
             count=0; rootfiles.clear()
             print("")
-
-    if (merge): os.system("python scripts/haddnano.py %s/%s.root %s/*.root" %(outdirectory, pd_sample, outdirectory) )
+            
+    if (merge): os.system("python scripts/haddnano.py %s/%s.root %s/*.root" %(outdirectory, pd_sample, outdirectory) 

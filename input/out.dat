@@ -1,4 +1,5 @@
 # Default output variables
+event
 weights
 xsec
 evtWeight
@@ -63,3 +64,4 @@ mcTrue
 pair_mass
 nTnP_pair
 TnP_mass
+pair_mass

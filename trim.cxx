@@ -3,22 +3,21 @@
 #include "input/input.h"
 
 int main(int argc, char **argv) {
-
-  //may return 0 when not able to detect   
-  const auto processor_count = std::thread::hardware_concurrency();
-
-  std::cout << "ncpu detected : " << processor_count << ", using it all!" << std::endl;
-  ROOT::EnableImplicitMT(processor_count);
-
-  if(argc != 3) {
-        std::cout << "Use executable with following arguments: ./trim input output " << std::endl;
-        return -1;
+  
+  if(argc != 4) {
+    std::cout << "Use executable with following arguments: ./trim input output core" << std::endl;
+    return -1;
   }
-
+    
   // start time
   TStopwatch time;
   time.Start();
-
+  
+  int ncore = atoi(argv[3]);
+  const auto processor_count = (ncore == -1) ? std::thread::hardware_concurrency() : ncore;
+  std::cout << "ncpu detected : " << processor_count << ", using it all!" << std::endl;
+  ROOT::EnableImplicitMT(processor_count);
+  
   // characterize configuration
   Helper::config_t mycfg;
   mycfg.input  = argv[1];
