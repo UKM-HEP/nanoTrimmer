@@ -140,3 +140,5 @@ if __name__ == "__main__":
             execute( outdirectory , jobname )
             count=0; rootfiles.clear()
             print("")
+            
+    os.system("python scripts/haddnano.py %s/%s.root %s/*.root" %( outdirectory , pd_sample , outdirectory ) )

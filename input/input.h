@@ -64,8 +64,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   df = tnpkin( df , cfg , "Tag" );                                                             // saving the TAG kinematics: pt, eta, phi, mass, pdgId, matching information
   df = tnpkin( df , cfg , "Probe" );                                                           // saving the PROBE kinematics: pt, eta, phi, mass, pdgId, matching information
   df = df.Define( "mcTrue" , (cfg.isMC) ? "Tag_isGenMatched*Probe_isGenMatched>0" : "1" );     // produce mcTrue variable
-  //df = Helper::ironing( df , "Tag_pt" , "1" );
-  //df = Helper::ironing( df , "Jet_pt" , "1" );
+  df = df.Define( "pair_mass" , "TnP_mass[0]" );
   // --> DONT TOUCH <--- ////////////////////////////////////////////////////////////////////
   
   // OFFLINE PRE-SELECTION
@@ -74,7 +73,6 @@ auto runningInput( T &df , Helper::config_t &cfg ){
     .Filter( "!(abs(Tag_eta)>= 1.4442 && abs(Tag_eta)<=1.566)" , "PRE-SELECTION: Selecting event containing Tag candidates well covered inside the detector" )
     .Filter( "abs(Tag_pdgId) == "+Id+" && Tag_pdgId+Probe_pdgId == 0" , "PRE-SELECTION: Selecting event containing Tag and Probe pair made up of 2 "+cfg.Flavor     )
     .Filter( "Tag_wp == 4 ", "PRE-SELECTION: Selecting event containing Tag with working point tight" )
-    //.Filter( "Probe_wp == 3 ", "PRE-SELECTION: Selecting event containing Probe with working point medium" )
     ;
   
   return df;
