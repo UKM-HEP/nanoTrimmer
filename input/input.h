@@ -9,7 +9,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // *********************************************************************
   // *********************************************************************
   // What is the integrated luminosity you are working with ?
-  cfg.Luminosity = 4430; // in pb^{-1}
+  cfg.Luminosity = 890; // in pb^{-1}
 
   // What is the HLT trigger you used for your analysis ?
   cfg.HLT = "HLT_Ele27_WP80";
@@ -23,7 +23,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   if (cfg.isMC) cfg.HLTobject = "GenPart";
   
   // What is the MINIMUM transverse momentum for your Tag ?
-  cfg.kMinTagPt = 30; // GeV
+  cfg.kMinTagPt = 32; // GeV
 
   // What is the MAXIMUM pseudorapidity for your Tag ?
   cfg.kMaxTagEta = 2.4;
