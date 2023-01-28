@@ -12,12 +12,12 @@ Jet_eta
 Jet_phi
 Jet_mass
 Jet_puId
-Electron_pt
-Electron_eta
-Electron_phi
-Electron_charge
-Electron_mass
-Electron_cutBasedId
+#Electron_pt
+#Electron_eta
+#Electron_phi
+#Electron_charge
+#Electron_mass
+#Electron_cutBasedId
 #Electron_pfRelIso03_all
 #Electron_jetIdx
 #Electron_genPartIdx
@@ -34,14 +34,14 @@ Muon_eta
 Muon_phi
 Muon_mass
 Muon_charge
-#Muon_pfRelIso03_all
-#Muon_pfRelIso04_all
+Muon_pfRelIso03_all
+Muon_pfRelIso04_all
 Muon_tightId
 Muon_softId
 Muon_looseId
 Muon_cutBasedId
-#Muon_jetIdx
-#Muon_genPartIdx
+Muon_jetIdx
+Muon_genPartIdx
 # tnp related output variables
 Tag_pt
 Tag_eta
