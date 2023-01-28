@@ -12,14 +12,14 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   cfg.Luminosity = 4430; // in pb^{-1}
 
   // What is the HLT trigger you used for your analysis ?
-  cfg.HLT = "HLT_Dimuon0_Jpsi_Muon";
+  cfg.HLT = "HLT_DoubleMu3 || HLT_DoubleMu3_Jpsi || HLT_DoubleMu3_LowMass";
 
   // What is the type of lepton you are working with ?
   cfg.Flavor = "Muon";
   std::string Id = (cfg.Flavor == "Electron") ? "11" : "13";
 
   // What is the HLT object you are working with ?
-  cfg.HLTobject = "TrigObj_jpsiu";
+  cfg.HLTobject = "TrigObj_jpsiu_runa";
   if (cfg.isMC) cfg.HLTobject = "GenPart";
   
   // What is the MINIMUM transverse momentum for your Tag ?
