@@ -12,18 +12,18 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   cfg.Luminosity = 890; // in pb^{-1}
 
   // What is the HLT trigger you used for your analysis ?
-  cfg.HLT = "HLT_Ele27_WP80";
+  cfg.HLT = "HLT_IsoMu30_eta2p1";
 
   // What is the type of lepton you are working with ?
-  cfg.Flavor = "Electron";
+  cfg.Flavor = "Muon";
   std::string Id = (cfg.Flavor == "Electron") ? "11" : "13";
 
   // What is the HLT object you are working with ?
-  cfg.HLTobject = "TrigObj_ele";
+  cfg.HLTobject = "TrigObj_isou";
   if (cfg.isMC) cfg.HLTobject = "GenPart";
   
   // What is the MINIMUM transverse momentum for your Tag ?
-  cfg.kMinTagPt = 32; // GeV
+  cfg.kMinTagPt = 35; // GeV
 
   // What is the MAXIMUM pseudorapidity for your Tag ?
   cfg.kMaxTagEta = 2.4;
