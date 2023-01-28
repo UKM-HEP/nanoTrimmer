@@ -34,8 +34,9 @@ int main(int argc, char **argv) {
   std::string str;
   while (std::getline(file, str)) { mycfg.infiles.push_back(str); }
 
-  std::cout << ">>> Process input: " << mycfg.input << std::endl;
-  std::cout << ">>> Process output: " << mycfg.output << std::endl;
+  std::cout << ">>> This is MC     : " << mycfg.isMC << std::endl;
+  std::cout << ">>> Process input  : " << mycfg.input << std::endl;
+  std::cout << ">>> Process output : " << mycfg.output << std::endl;
   for(auto ifile : mycfg.infiles) std::cout << ifile <<std::endl;
 
   ROOT::RDataFrame df_( "aod2nanoaod/Events" , mycfg.infiles);
@@ -55,8 +56,8 @@ int main(int argc, char **argv) {
   //df = Helper::ironing( df , "Electron_pt" , 1 ).Filter( "Electron_pt1>10" , "POST-PROCESS : events with 1st electron pt > 10 GeV" );
   //df = Helper::ironing( df , "Electron_pt" , 2 ).Filter( "Electron_pt2>15" , "POST-PROCESS : events with 2nd electron pt > 15 GeV" );
   
-  df = Helper::ironing( df , "Muon_pt" , "1" ).Filter( "Muon_pt1>20" , "POST-PRO: events with 1st muon pt > 20 GeV" );
-  df = Helper::ironing( df , "Muon_pt" , "2" ).Filter( "Muon_pt2>20" , "POST-PRO: events with 2nd muon pt > 20 GeV" );
+  df = Helper::ironing( df , "Muon_pt" , 1 ).Filter( "Muon_pt1>20" , "POST-PRO: events with 1st muon pt > 20 GeV" );
+  df = Helper::ironing( df , "Muon_pt" , 2 ).Filter( "Muon_pt2>20" , "POST-PRO: events with 2nd muon pt > 20 GeV" );
 
   // refer to input/input.h
   df = runningInput( df , mycfg );

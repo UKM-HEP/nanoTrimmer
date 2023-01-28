@@ -47,8 +47,8 @@ auto runningInput( T &df , Helper::config_t &cfg ){
 
   // What is the defined WP for Tag?
   // Electron : 0 fail ; 1 veto ; 2 loose ; 3 medium ; 4 tight
-  // Muon     : 1 loose ; 2 soft ; 4 tight
-  cfg.kWPTag = 4;
+  // Muon     : 1 loose ; 3 soft ; 7 tight
+  cfg.kWPTag = 7;
 
   // *********************************************************************
   // *********************************************************************
@@ -74,7 +74,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
     .Filter( cfg.HLT+"==1" , "PRE-SELECTION: Passing "+ cfg.HLT +" trigger selection" )
     .Filter( "!(abs(Tag_eta)>= 1.4442 && abs(Tag_eta)<=1.566)" , "PRE-SELECTION: Selecting event containing Tag candidates well covered inside the detector" )
     .Filter( "abs(Tag_pdgId) == "+Id+" && Tag_pdgId+Probe_pdgId == 0" , "PRE-SELECTION: Selecting event containing Tag and Probe pair made up of 2 "+cfg.Flavor     )
-    .Filter( "Tag_wp == 4 ", "PRE-SELECTION: Selecting event containing Tag with working point tight" )
+    .Filter( "Tag_wp == 7 ", "PRE-SELECTION: Selecting event containing Tag with working point tight" )
     ;
   
   return df;
