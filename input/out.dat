@@ -18,6 +18,8 @@ Electron_phi
 Electron_charge
 Electron_mass
 Electron_cutBasedId
+#Electron_isTrgObjMatched
+#Electron_isGenMatched
 #Electron_pfRelIso03_all
 #Electron_jetIdx
 #Electron_genPartIdx
