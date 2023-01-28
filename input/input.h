@@ -9,7 +9,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // *********************************************************************
   // *********************************************************************
   // What is the integrated luminosity you are working with ?
-  cfg.Luminosity = 890; // in pb^{-1}
+  cfg.Luminosity = 4430; // in pb^{-1}
 
   // What is the HLT trigger you used for your analysis ?
   cfg.HLT = "HLT_IsoMu30_eta2p1";
