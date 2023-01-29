@@ -149,6 +149,7 @@ namespace Helper {
     bool isMC;
     float Luminosity;
     float xsec;
+    int numEvt;
     std::string HLT;
     std::string Flavor;
     std::string HLTobject;
