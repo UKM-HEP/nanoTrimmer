@@ -130,11 +130,9 @@ auto matching( T &df , Helper::config_t &cfg ) {
       
       if (cfg.isMC){ isgenmatch[ilep]  = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
       if (!cfg.isMC){ ishltmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
-
-      std::cout<<"After : "<<ishltmatch[ilep]<<std::endl;
       
     }
-
+    
     return std::make_tuple( ishltmatch , isgenmatch );
   };
   
