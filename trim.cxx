@@ -47,16 +47,12 @@ int main(int argc, char **argv) {
   // event-level filter
   df = df.Filter( "nJet>0"       , "POST-PROCESS : keeping events with at least 1 jet"      );
   df = df.Filter( "nElectron>1"   , "POST-PROCESS : keeping events with at least 2 electrons" );
-  //df = df.Filter( "nMuon>1"       , "POST-PRO: keeping events with at least 2 muons"     );
 
   // particle-level filter
   df = Helper::ironing( df , "Jet_pt" , 1 ).Filter( "Jet_pt1>35" , "POST-PROCESS : events with jet1 pt > 35 GeV" );
   
   df = Helper::ironing( df , "Electron_pt" , 1 ).Filter( "Electron_pt1>20" , "POST-PROCESS : events with 1st electron pt > 20 GeV" );
   df = Helper::ironing( df , "Electron_pt" , 2 ).Filter( "Electron_pt2>20" , "POST-PROCESS : events with 2nd electron pt > 20 GeV" );
-  
-  //df = Helper::ironing( df , "Muon_pt" , "1" ).Filter( "Muon_pt1>10" , "POST-PRO: events with 1st muon pt > 20 GeV" );
-  //df = Helper::ironing( df , "Muon_pt" , "2" ).Filter( "Muon_pt2>10" , "POST-PRO: events with 2nd muon pt > 20 GeV" );
 
   // refer to input/input.h
   df = runningInput( df , mycfg );

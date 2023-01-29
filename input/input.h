@@ -39,6 +39,10 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // 8TeV: https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat8TeV
   cfg.xsec =  1177.3; // pb
 
+  // Number of event used in the dataset.
+  // https://opendata.cern.ch/record/31
+  cfg.numEvt = 41709195; 
+
   // What is the MAXIMUM mass of your favorite resonance?
   cfg.kMaxMass = 120.; // GeV
 
@@ -55,9 +59,8 @@ auto runningInput( T &df , Helper::config_t &cfg ){
 
   // OFFLINE POST-PROCESSING
   // --> DONT TOUCH <--- ////////////////////////////////////////////////////////////////////
-  df = df.Define( "xsec" , std::to_string(cfg.xsec) ).Define( "lumi" , std::to_string(cfg.Luminosity) );
-
-  df = (cfg.isMC) ? df.Define( "weights" , "(xsec/event)*lumi*evtWeight*1" ) : df.Define( "weights" , "1" ) ; // produce total weights
+  df = df.Define( "xsec" , std::to_string(cfg.xsec) ).Define( "lumi" , std::to_string(cfg.Luminosity) ).Define( "nevent" , std::to_string(cfg.numEvt) );
+  df = (cfg.isMC) ? df.Define( "weights" , "(xsec/nevent)*lumi*evtWeight*1" ) : df.Define( "weights" , "1" ) ; // produce total weights
   df = df.Define("Muon_cutBasedId", "(Muon_looseId*1)+(Muon_softId*2)+(Muon_tightId*4)" );     // produce convenient cutbasedID for muon object
   df = makeLorentzVector( df , cfg.Flavor );                                                   // produce 4-vector for the flavor for ease of computation
   df = makeLorentzVector( df , cfg.HLTobject );                                                // produce 4-vector for the HLT object for ease of computation
