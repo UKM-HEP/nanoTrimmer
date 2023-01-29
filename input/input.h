@@ -9,11 +9,12 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // *********************************************************************
   // *********************************************************************
   // What is the integrated luminosity you are working with ?
-  cfg.Luminosity = 4430; // in pb^{-1}
+  cfg.Luminosity = 2330; // in pb^{-1}
 
   // What is the HLT trigger you used for your analysis ?
-  cfg.HLT = "HLT_DoubleMu3 || HLT_DoubleMu3_Jpsi || HLT_DoubleMu3_LowMass";
-
+  cfg.HLT = "HLT_DoubleMu3 || HLT_DoubleMu3_Jpsi || HLT_DoubleMu3_LowMass || HLT_DoubleMu3_Quarkonium || HLT_Dimuon10_Jpsi_Barrel || HLT_Dimuon13_Jpsi_Barrel || HLT_Dimuon6_LowMass";
+  
+  // 
   // What is the type of lepton you are working with ?
   cfg.Flavor = "Muon";
   std::string Id = (cfg.Flavor == "Electron") ? "11" : "13";
@@ -23,7 +24,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   if (cfg.isMC) cfg.HLTobject = "GenPart";
   
   // What is the MINIMUM transverse momentum for your Tag ?
-  cfg.kMinTagPt = 5; // GeV
+  cfg.kMinTagPt = 6; // GeV
 
   // What is the MAXIMUM pseudorapidity for your Tag ?
   cfg.kMaxTagEta = 2.4;
@@ -37,7 +38,8 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // What is the resonance cross section?
   // 7TeV: https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSections
   // 8TeV: https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat8TeV
-  cfg.xsec =  1177.3; // pb
+  // 7TeV J/Psi decay into mumu : http://cds.cern.ch/record/1279616/files/BPH-10-002-pas.pdf
+  cfg.xsec = 289.1*1000; // pb
 
   // Number of event used in the dataset.
   // https://opendata.cern.ch/record/27
@@ -52,7 +54,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // What is the defined WP for Tag?
   // Electron : 0 fail ; 1 veto ; 2 loose ; 3 medium ; 4 tight
   // Muon     : 1 loose ; 2 soft ; 4 tight
-  cfg.kWPTag = 4;
+  cfg.kWPTag = 7;
 
   // flat scale factor
   cfg.sf = 1.;
