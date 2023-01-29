@@ -40,8 +40,8 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   cfg.xsec =  1177.3; // pb
 
   // Number of event used in the dataset.
-  // https://opendata.cern.ch/record/31
-  cfg.numEvt = 41709195; 
+  // https://opendata.cern.ch/record/24415
+  cfg.numEvt = 21229150; 
 
   // What is the MAXIMUM mass of your favorite resonance?
   cfg.kMaxMass = 120.; // GeV
