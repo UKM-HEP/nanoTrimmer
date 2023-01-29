@@ -19,7 +19,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   std::string Id = (cfg.Flavor == "Electron") ? "11" : "13";
 
   // What is the HLT object you are working with ?
-  cfg.HLTobject = "TrigObj_isou_runa";
+  cfg.HLTobject = "TrigObj_isou_runb";
   if (cfg.isMC) cfg.HLTobject = "GenPart";
   
   // What is the MINIMUM transverse momentum for your Tag ?
