@@ -126,8 +126,6 @@ auto matching( T &df , Helper::config_t &cfg ) {
       
       const auto deltarS = pow(lepton_eta[ilep] - obj_eta[iobj] , 2) + pow(Helper::DeltaPhi(lepton_phi[ilep], obj_phi[iobj] ), 2);
       
-      std::cout<<"Before : "<<ishltmatch[ilep]<<std::endl;
-      
       if (cfg.isMC){ isgenmatch[ilep]  = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
       if (!cfg.isMC){ ishltmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
     }
