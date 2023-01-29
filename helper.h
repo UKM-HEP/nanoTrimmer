@@ -150,6 +150,7 @@ namespace Helper {
     float Luminosity;
     float xsec;
     int numEvt;
+    float sf;
     std::string HLT;
     std::string Flavor;
     std::string HLTobject;

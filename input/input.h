@@ -54,13 +54,16 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // Muon     : 1 loose ; 2 soft ; 4 tight
   cfg.kWPTag = 4;
 
+  // flat scale factor
+  cfg.sf = 1.;
+
   // *********************************************************************
   // *********************************************************************
 
   // OFFLINE POST-PROCESSING
   // --> DONT TOUCH <--- ////////////////////////////////////////////////////////////////////
-  df = df.Define( "xsec" , std::to_string(cfg.xsec) ).Define( "lumi" , std::to_string(cfg.Luminosity) ).Define( "nevent" , std::to_string(cfg.numEvt) );
-  df = (cfg.isMC) ? df.Define( "weights" , "(xsec/nevent)*lumi*evtWeight*1" ) : df.Define( "weights" , "1" ) ; // produce total weights
+  df = df.Define( "xsec" , std::to_string(cfg.xsec) ).Define( "lumi" , std::to_string(cfg.Luminosity) ).Define( "nevent" , std::to_string(cfg.numEvt) ).Define( "sf" , std::to_string(cfg.sf) );
+  df = (cfg.isMC) ? df.Define( "weights" , "(xsec/nevent)*lumi*evtWeight*sf" ) : df.Define( "weights" , "1" ) ; // produce total weights
   df = df.Define("Muon_cutBasedId", "(Muon_looseId*1)+(Muon_softId*2)+(Muon_tightId*4)" );     // produce convenient cutbasedID for muon object
   df = makeLorentzVector( df , cfg.Flavor );                                                   // produce 4-vector for the flavor for ease of computation
   df = makeLorentzVector( df , cfg.HLTobject );                                                // produce 4-vector for the HLT object for ease of computation
