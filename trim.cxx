@@ -34,8 +34,9 @@ int main(int argc, char **argv) {
   std::string str;
   while (std::getline(file, str)) { mycfg.infiles.push_back(str); }
 
-  std::cout << ">>> Process input: " << mycfg.input << std::endl;
-  std::cout << ">>> Process output: " << mycfg.output << std::endl;
+  std::cout << ">>> This is MC     : " << mycfg.isMC << std::endl;
+  std::cout << ">>> Process input  : " << mycfg.input << std::endl;
+  std::cout << ">>> Process output : " << mycfg.output << std::endl;
   for(auto ifile : mycfg.infiles) std::cout << ifile <<std::endl;
 
   ROOT::RDataFrame df_( "aod2nanoaod/Events" , mycfg.infiles);
@@ -47,7 +48,7 @@ int main(int argc, char **argv) {
   // event-level filter
   df = df.Filter( "nJet>0"       , "POST-PROCESS : keeping events with at least 1 jet"      );
   df = df.Filter( "nMuon>1"       , "POST-PRO: keeping events with at least 2 muons"     );
-
+  
   // particle-level filter
   //df = Helper::ironing( df , "Jet_pt" , 1 ).Filter( "Jet_pt1>35" , "POST-PROCESS : events with jet1 pt > 35 GeV" );
   

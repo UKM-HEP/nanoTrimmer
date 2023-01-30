@@ -115,18 +115,18 @@ auto matching( T &df , Helper::config_t &cfg ) {
     const auto numComb = comb[0].size();
     RVec<int> ishltmatch(lepton_eta.size(), (cfg.isMC) ? 1 : 0 );
     RVec<int> isgenmatch(lepton_eta.size(), (cfg.isMC) ? 0 : 1 );
-
+    
     int theId = Id;
     
     for (size_t i = 0 ; i < numComb ; i++) {
       const auto ilep = comb[0][i];
       const auto iobj = comb[1][i];
-
+      
       if (cfg.isMC) if ( abs(obj_id[iobj]) != theId ) continue;
       
       const auto deltarS = pow(lepton_eta[ilep] - obj_eta[iobj] , 2) + pow(Helper::DeltaPhi(lepton_phi[ilep], obj_phi[iobj] ), 2);
-
-      if (cfg.isMC){ isgenmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
+      
+      if (cfg.isMC){ isgenmatch[ilep]  = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
       if (!cfg.isMC){ ishltmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
     }
     
@@ -179,8 +179,9 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
 	
       // tag selection
       if ( !( tag.Pt() > cfg.kMinTagPt && abs(tag.Eta()) < cfg.kMaxTagEta ) ) continue;
-
+      
       // match?
+      //std::cout<<"matching : "<< ismatch[i] << std::endl;
       if ( !cfg.isMC && !ismatch[i] ) continue;
 
       // pass the tight wp?
@@ -246,19 +247,6 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
 
   // note, the MC genmatch is redundant (NOT USING IN CASE SAMPLE IS MC))
   std::string matcher = (!cfg.isMC) ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
-
-  // tnp specifics variables
-  /*
-  std::vector<std::string> tnp_out = {
-    "nTnP_pair",
-    "TnP_mass",
-    "Tag_Idx",
-    "Probe_Idx",
-  };
-  
-  cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
-
-  */
   
   return df.Define(
 		   "maketnpvector" ,
@@ -298,8 +286,8 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
     
     RVec<float> tp_pt, tp_eta, tp_phi, tp_mass;
     RVec<int> tp_pdgid, tp_wp;
-    RVec<int> tp_hltmatch(tp_idx.size(), (cfg.isMC) ? 0 : 1 );
-    RVec<int> tp_genmatch(tp_idx.size(), (cfg.isMC) ? 1 : 0 );
+    RVec<int> tp_hltmatch(tp_idx.size(), (cfg.isMC) ? 1 : 0 );
+    RVec<int> tp_genmatch(tp_idx.size(), (cfg.isMC) ? 0 : 1 );
     
     for ( unsigned int i =0 ; i < tp_idx.size() ; i++ ){
       
