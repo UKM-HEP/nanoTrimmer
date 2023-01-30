@@ -81,8 +81,8 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   df = df
     .Filter( cfg.HLT+"==1" , "PRE-SELECTION: Passing "+ cfg.HLT +" trigger selection" )
     .Filter( "!(abs(Tag_eta)>= 1.4442 && abs(Tag_eta)<=1.566)" , "PRE-SELECTION: Selecting event containing Tag candidates well covered inside the detector" )
-    .Filter( "abs(Tag_pdgId) == "+Id+" && Tag_pdgId+Probe_pdgId == 0" , "PRE-SELECTION: Selecting event containing Tag and Probe pair made up of 2 "+cfg.Flavor+" (pdgId = "+Id+")"     )
-    .Filter( "Tag_wp == 4 ", "PRE-SELECTION: Selecting event containing Tag with working point tight" )
+    //.Filter( "abs(Tag_pdgId) == "+Id+" && Tag_pdgId+Probe_pdgId == 0" , "PRE-SELECTION: Selecting event containing Tag and Probe pair made up of 2 "+cfg.Flavor+" (pdgId = "+Id+")"     )
+    //.Filter( "Tag_wp == 4 ", "PRE-SELECTION: Selecting event containing Tag with working point tight" )
     ;
   
   return df;
