@@ -27,8 +27,9 @@ int main(int argc, char **argv) {
   std::vector<std::string> hlt = Helper::makeList("input/HLT.dat");
   mycfg.outputVar = Helper::joinVector( out , hlt );
   
-  mycfg.isMC   = ( mycfg.input.find("Run") != std::string::npos || mycfg.input.find("JPsi") != std::string::npos ) ? false : true;
-
+  //mycfg.isMC   = ( mycfg.input.find("Run") != std::string::npos || mycfg.input.find("JPsi") != std::string::npos ) ? false : true;
+  mycfg.isMC   = ( mycfg.input.find("Run") != std::string::npos ) ? false : true;
+  
   // filelist
   std::ifstream file(mycfg.input);
   std::string str;

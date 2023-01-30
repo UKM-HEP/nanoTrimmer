@@ -22,6 +22,8 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // What is the HLT object you are working with ?
   cfg.HLTobject = "TrigObj_jpsiu_runa";
   if (cfg.isMC) cfg.HLTobject = "GenPart";
+  cfg.isjpsi = (cfg.HLTobject.find("TrigObj_jpsiu") != std::string::npos) ? true : false;
+  std::cout<<"cfg.isjpsi : "<<cfg.isjpsi<<std::endl;
   
   // What is the MINIMUM transverse momentum for your Tag ?
   cfg.kMinTagPt = 6; // GeV
@@ -81,8 +83,9 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   df = df
     .Filter( cfg.HLT+"==1" , "PRE-SELECTION: Passing "+ cfg.HLT +" trigger selection" )
     .Filter( "!(abs(Tag_eta)>= 1.4442 && abs(Tag_eta)<=1.566)" , "PRE-SELECTION: Selecting event containing Tag candidates well covered inside the detector" )
+    .Filter( "nTnP_pair>=1" , "PRE-SELECTION: Selecting event containing at least one pair of tag and probe candidate" )
     .Filter( "abs(Tag_pdgId) == "+Id+" && Tag_pdgId+Probe_pdgId == 0" , "PRE-SELECTION: Selecting event containing Tag and Probe pair made up of 2 "+cfg.Flavor+" (pdgId = "+Id+")"     )
-    .Filter( "Tag_wp == 4 ", "PRE-SELECTION: Selecting event containing Tag with working point tight" )
+    .Filter( "Tag_wp == 7 ", "PRE-SELECTION: Selecting event containing Tag with working point tight" )
     ;
   
   return df;
