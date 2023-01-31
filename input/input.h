@@ -9,7 +9,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // *********************************************************************
   // *********************************************************************
   // What is the integrated luminosity you are working with ?
-  cfg.Luminosity = 2270.; // in pb^{-1}
+  cfg.Luminosity = 890; // in pb^{-1}
 
   // What is the HLT trigger you used for your analysis ?
   cfg.HLT = "HLT_Ele27_WP80";
@@ -23,7 +23,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   if (cfg.isMC) cfg.HLTobject = "GenPart";
   
   // What is the MINIMUM transverse momentum for your Tag ?
-  cfg.kMinTagPt = 30; // GeV
+  cfg.kMinTagPt = 32; // GeV
 
   // What is the MAXIMUM pseudorapidity for your Tag ?
   cfg.kMaxTagEta = 2.4;
@@ -35,7 +35,13 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   cfg.kMaxProbeEta = 2.4;
 
   // What is the resonance cross section?
-  cfg.xsec = 2500.; // pb
+  // 7TeV: https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSections
+  // 8TeV: https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat8TeV
+  cfg.xsec =  1177.3; // pb
+
+  // Number of event used in the dataset.
+  // https://opendata.cern.ch/record/31
+  cfg.numEvt = 41709195; 
 
   // What is the MAXIMUM mass of your favorite resonance?
   cfg.kMaxMass = 120.; // GeV
@@ -48,14 +54,16 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // Muon     : 1 loose ; 2 soft ; 4 tight
   cfg.kWPTag = 4;
 
+  // flat scale factor
+  cfg.sf = 1.;
+
   // *********************************************************************
   // *********************************************************************
 
   // OFFLINE POST-PROCESSING
   // --> DONT TOUCH <--- ////////////////////////////////////////////////////////////////////
-  df = df.Define( "xsec" , std::to_string(cfg.xsec) ).Define( "lumi" , std::to_string(cfg.Luminosity) );
-  df = df.Define( "weights" , (cfg.isMC) ? "(xsec/event)*lumi*evtWeight*1" : "1" );
-  //df = df.Define( "weight" , (cfg.isMC) ? "(xsec/event)*"+cfg.Luminosity+"*evtWeight*1*" : "1" );  // produce weight variable
+  df = df.Define( "xsec" , std::to_string(cfg.xsec) ).Define( "lumi" , std::to_string(cfg.Luminosity) ).Define( "nevent" , std::to_string(cfg.numEvt) ).Define( "sf" , std::to_string(cfg.sf) );
+  df = (cfg.isMC) ? df.Define( "weights" , "(xsec/nevent)*lumi*evtWeight*sf" ) : df.Define( "weights" , "1" ) ; // produce total weights
   df = df.Define("Muon_cutBasedId", "(Muon_looseId*1)+(Muon_softId*2)+(Muon_tightId*4)" );     // produce convenient cutbasedID for muon object
   df = makeLorentzVector( df , cfg.Flavor );                                                   // produce 4-vector for the flavor for ease of computation
   df = makeLorentzVector( df , cfg.HLTobject );                                                // produce 4-vector for the HLT object for ease of computation

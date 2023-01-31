@@ -126,22 +126,12 @@ auto matching( T &df , Helper::config_t &cfg ) {
       
       const auto deltarS = pow(lepton_eta[ilep] - obj_eta[iobj] , 2) + pow(Helper::DeltaPhi(lepton_phi[ilep], obj_phi[iobj] ), 2);
 
-      if (cfg.isMC){
-	isgenmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ;
-	continue;
-      }
-      else {
-	ishltmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ;
-	continue;
-      }
+      if (cfg.isMC){ isgenmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
+      if (!cfg.isMC){ ishltmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
     }
     
-    return std::make_tuple( isgenmatch , ishltmatch );
+    return std::make_tuple( ishltmatch , isgenmatch );
   };
-  
-  //std::string v_out = (object != "GenPart") ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
-  
-  //cfg.outputVar.emplace_back( v_out );
   
   return df
     .Define( "matcher" , ismatched , {
