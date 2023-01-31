@@ -115,18 +115,19 @@ auto matching( T &df , Helper::config_t &cfg ) {
     const auto numComb = comb[0].size();
     RVec<int> ishltmatch(lepton_eta.size(), (cfg.isMC) ? 1 : 0 );
     RVec<int> isgenmatch(lepton_eta.size(), (cfg.isMC) ? 0 : 1 );
-
+    
     int theId = Id;
     
     for (size_t i = 0 ; i < numComb ; i++) {
       const auto ilep = comb[0][i];
       const auto iobj = comb[1][i];
-
+      
       if (cfg.isMC) if ( abs(obj_id[iobj]) != theId ) continue;
       
       const auto deltarS = pow(lepton_eta[ilep] - obj_eta[iobj] , 2) + pow(Helper::DeltaPhi(lepton_phi[ilep], obj_phi[iobj] ), 2);
-
-      if (cfg.isMC){ isgenmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
+      
+      if (cfg.isMC){ isgenmatch[ilep]  = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
+      
       if (!cfg.isMC){ ishltmatch[ilep] = (deltarS < cfg.minDeltaR) ? 1 : 0 ; continue; }
     }
     
@@ -179,9 +180,10 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
 	
       // tag selection
       if ( !( tag.Pt() > cfg.kMinTagPt && abs(tag.Eta()) < cfg.kMaxTagEta ) ) continue;
-
+      
       // match?
-      if ( !cfg.isMC && !ismatch[i] ) continue;
+      //std::cout<<"matching : "<< ismatch[i] << std::endl;
+      //if ( !cfg.isMC && !ismatch[i] ) continue;
 
       // pass the tight wp?
       if ( lepton_wp[i] != cfg.kWPTag ) continue;
@@ -197,7 +199,7 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
 	if ( !( probe.Pt() > cfg.kMinProbePt && abs(probe.Eta()) < cfg.kMaxProbeEta ) ) continue;
 	
 	float mass = (tag + probe).M();
-
+	
 	//std::cout<<"The invariant mass before passing is "<<mass<<std::endl;
 	
 	if ( ( mass > cfg.kMaxMass ) || ( mass < cfg.kMinMass ) ) continue;
@@ -215,8 +217,8 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
       
     } // end tag loop
     
-    // the first pair is closer to zmass
-    masspair_vector = Helper::IndexbyZmass(masspair_vector);
+    // the first pair is closer to z / jpsi mass
+    masspair_vector = (cfg.isjpsi) ? Helper::IndexbyJpsimass(masspair_vector) : Helper::IndexbyZmass(masspair_vector);
     
     // unpacking masspair vector information
     npair = masspair_vector.size();
@@ -246,19 +248,6 @@ auto tnpvector(T &df , Helper::config_t &cfg ) {
 
   // note, the MC genmatch is redundant (NOT USING IN CASE SAMPLE IS MC))
   std::string matcher = (!cfg.isMC) ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
-
-  // tnp specifics variables
-  /*
-  std::vector<std::string> tnp_out = {
-    "nTnP_pair",
-    "TnP_mass",
-    "Tag_Idx",
-    "Probe_Idx",
-  };
-  
-  cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
-
-  */
   
   return df.Define(
 		   "maketnpvector" ,
@@ -300,11 +289,11 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
     RVec<int> tp_pdgid, tp_wp;
     RVec<int> tp_hltmatch(tp_idx.size(), (cfg.isMC) ? 0 : 1 );
     RVec<int> tp_genmatch(tp_idx.size(), (cfg.isMC) ? 1 : 0 );
-    
+
+    int theId = Id;
     for ( unsigned int i =0 ; i < tp_idx.size() ; i++ ){
-      
       int theIdx = tp_idx[i];
-      int theId = Id;
+      
       if ( lepton_charge[theIdx] < 0 ) theId = theId*(-1);
       
       tp_pt.emplace_back( lepton_4v[theIdx].Pt() );
@@ -323,23 +312,6 @@ auto tnpkin( T &df , Helper::config_t &cfg , const std::string &tp ){
     
     return std::make_tuple( tp_pt, tp_eta, tp_phi, tp_mass, tp_pdgid, tp_wp, tp_hltmatch , tp_genmatch );
   };
-
-  // the tag and probe variables
-  //std::string matcher = (!cfg.isMC) ? flavor+"_isTrgObjMatched" : flavor+"_isGenMatched" ;
-
-  /*
-  std::vector<std::string> tnp_out = {
-    tp+"_pt",
-    tp+"_eta",
-    tp+"_phi",
-    tp+"_mass",
-    tp+"_pdgId",
-    tp+"_wp",
-    matcher_out
-  };
-  */
-  
-  //cfg.outputVar = Helper::joinVector( cfg.outputVar , tnp_out  );
 
   std::string thekin = tp+"_kin";
   return df.Define(

@@ -73,9 +73,20 @@ namespace Helper {
     bool operator() ( valuetagpair i , valuetagpair j ) { return ( abs(i.first - 91.2) < abs(j.first - 91.2) );  }
   };
 
+  struct JpsimassSorter {
+    bool operator() ( valuetagpair i , valuetagpair j ) { return ( abs(i.first - 3.1) < abs(j.first - 3.1) );  }
+  };
+
   template <typename T>
   std::vector<valuetagpair> IndexbyZmass(T vin ){
     ZmassSorter comparator;
+    std::sort (vin.begin() , vin.end() , comparator);
+    return vin;
+  }
+
+  template <typename T>
+  std::vector<valuetagpair> IndexbyJpsimass(T vin ){
+    JpsimassSorter comparator;
     std::sort (vin.begin() , vin.end() , comparator);
     return vin;
   }
@@ -150,9 +161,11 @@ namespace Helper {
     float Luminosity;
     float xsec;
     int numEvt;
+    float sf;
     std::string HLT;
     std::string Flavor;
     std::string HLTobject;
+    bool isjpsi;
     float kMinTagPt;
     float kMaxTagEta;
     float kMinProbePt;

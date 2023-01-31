@@ -42,6 +42,7 @@ Muon_looseId
 Muon_cutBasedId
 Muon_jetIdx
 Muon_genPartIdx
+Muon_isTrgObjMatched
 # tnp related output variables
 Tag_pt
 Tag_eta
