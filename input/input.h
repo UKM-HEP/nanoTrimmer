@@ -9,7 +9,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   // *********************************************************************
   // *********************************************************************
   // What is the integrated luminosity you are working with ?
-  cfg.Luminosity = 2330; // in pb^{-1}
+  cfg.Luminosity = 2770; // in pb^{-1}
 
   // What is the HLT trigger you used for your analysis ?
   cfg.HLT = "HLT_DoubleMu3 || HLT_DoubleMu3_Jpsi || HLT_DoubleMu3_LowMass || HLT_DoubleMu3_Quarkonium || HLT_Dimuon10_Jpsi_Barrel || HLT_Dimuon13_Jpsi_Barrel || HLT_Dimuon6_LowMass";
@@ -20,7 +20,7 @@ auto runningInput( T &df , Helper::config_t &cfg ){
   std::string Id = (cfg.Flavor == "Electron") ? "11" : "13";
 
   // What is the HLT object you are working with ?
-  cfg.HLTobject = "TrigObj_jpsiu_runa";
+  cfg.HLTobject = "TrigObj_jpsiu_runb";
   if (cfg.isMC) cfg.HLTobject = "GenPart";
   cfg.isjpsi = (cfg.HLTobject.find("TrigObj_jpsiu") != std::string::npos) ? true : false;
   std::cout<<"cfg.isjpsi : "<<cfg.isjpsi<<std::endl;
