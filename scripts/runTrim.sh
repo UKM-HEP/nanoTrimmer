@@ -6,8 +6,8 @@ start_time=$SECONDS
 
 # process the samples in the folder
 
-python ./scripts/trim.py -d ${PWD}/samples_test/Run2011B_MuOnia -o $PWD -n 3 -c 3
-python ./scripts/trim.py -d ${PWD}/samples_test/JPsiToMuMu_2MuPEtaFilter -o $PWD -n 3 -c 2
+python ./scripts/trim.py -d /disk01/cms-open-data/prod_v3/7TeV_tnp/RunI/7TeV/Run2011B_MuOnia -o $PWD -n 30 -c 5
+python ./scripts/trim.py -d /disk01/cms-open-data/prod_v3/7TeV_tnp/RunI/7TeV/JPsiToMuMu_2MuPEtaFilter -o $PWD -n 30 -c 5
 
 elapsed=$(( SECONDS - start_time ))
 echo
