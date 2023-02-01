@@ -55,11 +55,11 @@ auto runningInput( T &df , Helper::config_t &cfg ){
 
   // What is the defined WP for Tag?
   // Electron : 0 fail ; 1 veto ; 2 loose ; 3 medium ; 4 tight
-  // Muon     : 1 loose ; 2 soft ; 4 tight
+  // Muon     : 1 loose ; 3 soft ; 7 tight
   cfg.kWPTag = 7;
 
   // flat scale factor
-  cfg.sf = 1.;
+  cfg.sf = 0.18;
 
   // *********************************************************************
   // *********************************************************************
